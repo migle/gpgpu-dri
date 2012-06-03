@@ -10,11 +10,11 @@
 using namespace std;
 
 gem_buffer_object::gem_buffer_object(dri_device const& device)
-    : _device(device), _size(), _map_addr(), _map_size(), _handle()
+    : _device(device), _handle(), _size(), _map_addr(), _map_size()
     {}
 
 gem_buffer_object::gem_buffer_object(dri_device const& dev, uint32_t name)
-    : _device(dev), _size(), _map_addr(), _map_size(), _handle()
+    : _device(dev), _handle(), _size(), _map_addr(), _map_size()
 {
     /// This constructor is implemented using DRM_IOCTL_GEM_OPEN.
     /// It may throw a std::system_error exception wrapping the error returned

@@ -45,8 +45,9 @@ protected:
 protected:
     /// A const reference to the DRI device wrapper.
     dri_device const& _device;
+    std::uint32_t _handle;      ///< The GEM handle of the buffer object.
+    std::uint32_t _pad0;        ///< Padding.
     std::uint64_t _size;        ///< The size of the buffer object.
     void* _map_addr;            ///< The address at which it is mapped.
     std::size_t _map_size;      ///< The size of the mapping.
-    std::uint32_t _handle;      ///< The GEM handle of the buffer object.
 };
