@@ -28,9 +28,19 @@ int main(int argc, char* argv[])
         }
         std::cout << 3 << std::endl;
         {
-            void* ptr = bo.mmap(1<<20, 1<<20);
+#if 0
+            void* ptr = bo.mmap(1<<20, 1<<20); // non-zero offset not implemented
             std::memset(ptr, 77, 1<<20);
             bo.munmap();
+#elif 0
+            char buffer[1024];
+            std::memset(buffer, 77, sizeof(buffer));
+            bo.pwrite(1<<20, 1024, buffer); // pwrite not implemented
+#elif 1
+            char* ptr = static_cast<char*>(bo.mmap(0, 2<<20));
+            std::memset(ptr + (1<<20), 77, 1<<20);
+            bo.munmap();
+#endif
         }
         std::cout << 4 << std::endl;
         {

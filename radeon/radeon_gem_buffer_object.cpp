@@ -1,7 +1,6 @@
 #include "radeon_gem_buffer_object.hpp"
 
 #include <cstring>
-#include <iostream>
 #include <system_error>
 
 #include <sys/ioctl.h>
@@ -42,6 +41,50 @@ radeon_gem_buffer_object::radeon_gem_buffer_object(
     _size = args.size;
 }
 
+void radeon_gem_buffer_object::pread(uint64_t offset, uint64_t size, void* ptr)
+{
+    /// This member function uses DRM_IOCTL_RADEON_GEM_PREAD.
+    /// It may throw a std::system_error exception wrapping the error returned
+    /// by ioctl.
+    drm_radeon_gem_pread args;
+    memset(&args, 0, sizeof(args));
+
+    args.handle = _handle;
+    args.offset = offset;
+    args.size = size;
+    args.data_ptr = reinterpret_cast<uintptr_t>(ptr);
+
+    // Don't be put away by a simple EINTR or EAGAIN...
+    int r;
+    do {
+        r = ioctl(device().descriptor(), DRM_IOCTL_RADEON_GEM_PREAD, &args);
+    } while (r == -1 && (errno == EINTR || errno == EAGAIN));
+    if (r == -1)
+        throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_GEM_PREAD");
+}
+
+void radeon_gem_buffer_object::pwrite(uint64_t offset, uint64_t size, const void* ptr)
+{
+    /// This member function uses DRM_IOCTL_RADEON_GEM_PWRITE.
+    /// It may throw a std::system_error exception wrapping the error returned
+    /// by ioctl.
+    drm_radeon_gem_pwrite args;
+    memset(&args, 0, sizeof(args));
+
+    args.handle = _handle;
+    args.offset = offset;
+    args.size = size;
+    args.data_ptr = reinterpret_cast<uintptr_t>(ptr);
+
+    // Don't be put away by a simple EINTR or EAGAIN...
+    int r;
+    do {
+        r = ioctl(device().descriptor(), DRM_IOCTL_RADEON_GEM_PWRITE, &args);
+    } while (r == -1 && (errno == EINTR || errno == EAGAIN));
+    if (r == -1)
+        throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_GEM_PWRITE");
+}
+
 void* radeon_gem_buffer_object::mmap(uint64_t offset, uint64_t size)
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_MMAP and mmap.
@@ -50,7 +93,6 @@ void* radeon_gem_buffer_object::mmap(uint64_t offset, uint64_t size)
     drm_radeon_gem_mmap args;
     memset(&args, 0, sizeof(args));
 
-    std::cout << offset << std::endl;
     args.handle = _handle;
     args.offset = offset;
     args.size = size;

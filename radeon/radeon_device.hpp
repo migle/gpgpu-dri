@@ -13,9 +13,18 @@ public:
     /// \param path Pathname to the device node.
     radeon_device(const char* path, bool exclusive);
 
+    /// Access cached copy of the information on the GEM.
+    drm_radeon_gem_info const& gem_info() const { return _gem_info; }
+
+protected:
+    /// Obtain information related to the Graphics Execution Manager (GEM).
+    /// The GEM is a DRM concept. This structure contains information on
+    /// the amount of RAM, visibility and size of the GART.
+    drm_radeon_gem_info get_gem_info() const;
+
 private:
     /// Information related to the Graphics Execution Manager (GEM).
     /// The GEM is a DRM concept. This structure contains information on
     /// the amount of RAM, visibility and size of the GART.
-    drm_radeon_gem_info gem_info;
+    drm_radeon_gem_info _gem_info;
 };
