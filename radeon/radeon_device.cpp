@@ -1,6 +1,7 @@
 #include "radeon_device.hpp"
 
 #include <cstring>
+#include <iostream>
 #include <system_error>
 
 #include <sys/ioctl.h>
@@ -28,6 +29,11 @@ drm_radeon_gem_info radeon_device::get_gem_info() const
     } while (r == -1 && (errno == EINTR || errno == EAGAIN));
     if (r == -1)
         throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_GEM_INFO");
+
+    cout <<
+        "GART size = " << args.gart_size << " "
+        "VRAM size = " << args.vram_size << " "
+        "VRAM visible = " << args.vram_visible << endl;
 
     return args;
 }
