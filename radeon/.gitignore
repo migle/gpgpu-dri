@@ -1,4 +1,4 @@
 html/
 latex/
 *.o
-test
+test_buffer_object
