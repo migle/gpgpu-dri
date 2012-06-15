@@ -11,14 +11,24 @@
 using namespace std;
 
 radeon_gem_buffer_object::radeon_gem_buffer_object(
-        radeon_device const& dev,
+        radeon_device const& device,
         uint64_t size,
         uint64_t alignment,
         uint32_t domains,
         uint32_t flags)
-    : gem_buffer_object(dev)
+    : gem_buffer_object(device)
 {
-    /// This constructor is implemented using DRM_IOCTL_RADEON_GEM_CREATE.
+    /// This constructor is implemented using the create member function.
+    create(size, alignment, domains, flags);
+}
+
+void radeon_gem_buffer_object::create(
+        uint64_t size,
+        uint64_t alignment,
+        uint32_t domains,
+        uint32_t flags)
+{
+    /// This member function uses DRM_IOCTL_RADEON_GEM_CREATE.
     /// It may throw a std::system_error exception wrapping the error returned
     /// by ioctl.
     drm_radeon_gem_create args;

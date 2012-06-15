@@ -8,8 +8,9 @@
 /// This class wraps a handle to a GEM buffer object.
 class gem_buffer_object {
 public:
-    /// The destructor destroys the buffer object.
-    ~gem_buffer_object();
+    /// The destructor closes the buffer object.
+    ~gem_buffer_object() throw();
+
     /// This member function associates the buffer object with a global name.
     /// \returns The global name now associated with the object.
     std::uint32_t flink() const;
@@ -35,12 +36,14 @@ protected:
     /// initializes member variables to sane defaults.
     /// \param device The DRI device wrapper to associate with.
     gem_buffer_object(dri_device const& device);
-    /// This constructor opens an existing GEM buffer object in the given GPU.
-    /// The object is identified by a global name given by a previous call
-    /// to flink.
-    /// \param device The DRI device on which the object exists.
+
+    /// This member function opens an existing GEM buffer object in the given
+    /// GPU. The object is identified by a global name (an integer) given by
+    /// a previous call to flink.
     /// \param name The global name of the buffer object.
-    gem_buffer_object(dri_device const& device, std::uint32_t name);
+    void open(std::uint32_t name);
+    /// This member function closes the GEM buffer object.
+    void close();
 
 protected:
     /// A const reference to the DRI device wrapper.

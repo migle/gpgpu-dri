@@ -1,6 +1,6 @@
 #include "dri_device.hpp"
 
-#include <stdexcept>
+#include <iostream>
 #include <system_error>
 
 #include <sys/types.h>
@@ -13,19 +13,22 @@ dri_device::dri_device(const char* path)
     : _fd(-1)
 {
     open(path);
-    /*
-    try {
-        get_gem_info();
-    }
-    catch (exception& e) {
-        close();
-        throw e;
-    }*/
 }
 
-dri_device::~dri_device()
+dri_device::~dri_device() throw()
 {
-    if (_fd != -1) close();
+    try {
+        if (_fd != -1) close();
+    }
+    catch (system_error& e) {
+        // destructor is no-throw
+#if !defined(NDEBUG)
+        cerr << e.what()
+             << " : "
+             << e.code().message()
+             << endl;
+#endif
+    }
 }
 
 void dri_device::open(const char* path)
@@ -39,9 +42,12 @@ void dri_device::open(const char* path)
 
 void dri_device::close()
 {
-    int r = ::close(_fd);
-    if (r != 0)
-        throw system_error(error_code(errno, system_category()), "close");
+    if (_fd != -1)
+    {
+        int r = ::close(_fd);
+        if (r != 0)
+            throw system_error(error_code(errno, system_category()), "close");
 
-    _fd = -1;
+        _fd = -1;
+    }
 }

@@ -1,6 +1,7 @@
 #include "gem_buffer_object.hpp"
 
 #include <cstring>
+#include <iostream>
 #include <system_error>
 
 #include <sys/ioctl.h>
@@ -13,10 +14,26 @@ gem_buffer_object::gem_buffer_object(dri_device const& device)
     : _device(device), _handle(), _size(), _map_addr(), _map_size()
     {}
 
-gem_buffer_object::gem_buffer_object(dri_device const& dev, uint32_t name)
-    : _device(dev), _handle(), _size(), _map_addr(), _map_size()
+gem_buffer_object::~gem_buffer_object() throw()
 {
-    /// This constructor is implemented using DRM_IOCTL_GEM_OPEN.
+    /// The destructor uses the close member function.
+    try {
+        close();
+    }
+    catch (system_error& e) {
+        // destructor is no-throw
+#if !defined(NDEBUG)
+        cerr << e.what()
+             << " : "
+             << e.code().message()
+             << endl;
+#endif
+    }
+}
+
+void gem_buffer_object::open(uint32_t name)
+{
+    /// This member function uses DRM_IOCTL_GEM_OPEN.
     /// It may throw a std::system_error exception wrapping the error returned
     /// by ioctl.
     drm_gem_open args;
@@ -36,13 +53,13 @@ gem_buffer_object::gem_buffer_object(dri_device const& dev, uint32_t name)
     _size = args.size;
 }
 
-gem_buffer_object::~gem_buffer_object()
+void gem_buffer_object::close()
 {
     /// If the buffer object is mapped in the local address space, then it is
     /// unmapped as if by a call to the munmap member function.
     if (_map_addr) munmap();
 
-    /// The destructor is implemented using DRM_IOCTL_GEM_CLOSE.
+    /// This member function uses DRM_IOCTL_GEM_CLOSE.
     /// It may throw a std::system_error exception wrapping the error returned
     /// by ioctl.
     drm_gem_close args;
