@@ -9,7 +9,7 @@
 class gem_buffer_object {
 public:
     /// The destructor closes the buffer object.
-    ~gem_buffer_object() throw();
+    ~gem_buffer_object();
 
     /// This member function associates the buffer object with a global name.
     /// \returns The global name now associated with the object.

@@ -8,7 +8,7 @@ public:
     /// \param path Pathname to the device node.
     dri_device(const char* path);
     /// The destructor closes the device.
-    ~dri_device() throw();
+    ~dri_device();
 
     /// Get the file descriptor associated with this device.
     int descriptor() const { return _fd; }

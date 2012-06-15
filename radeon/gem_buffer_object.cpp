@@ -1,7 +1,6 @@
 #include "gem_buffer_object.hpp"
 
 #include <cstring>
-#include <iostream>
 #include <system_error>
 
 #include <sys/ioctl.h>
@@ -14,21 +13,9 @@ gem_buffer_object::gem_buffer_object(dri_device const& device)
     : _device(device), _handle(), _size(), _map_addr(), _map_size()
     {}
 
-gem_buffer_object::~gem_buffer_object() throw()
+gem_buffer_object::~gem_buffer_object()
 {
-    /// The destructor uses the close member function.
-    try {
-        close();
-    }
-    catch (system_error& e) {
-        // destructor is no-throw
-#if !defined(NDEBUG)
-        cerr << e.what()
-             << " : "
-             << e.code().message()
-             << endl;
-#endif
-    }
+    if (_handle) close();
 }
 
 void gem_buffer_object::open(uint32_t name)
@@ -74,6 +61,9 @@ void gem_buffer_object::close()
     } while (r == -1 && (errno == EINTR || errno == EAGAIN));
     if (r == -1)
         throw system_error(error_code(errno, system_category()), "DRM_IOCTL_GEM_CLOSE");
+
+    _handle = 0;
+    _size = 0;
 }
 
 uint32_t gem_buffer_object::flink() const

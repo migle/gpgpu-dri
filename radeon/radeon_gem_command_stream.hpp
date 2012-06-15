@@ -22,10 +22,10 @@ public:
     /// \param device The DRI device on which to create the object.
     radeon_gem_command_stream(radeon_device const& device);
     /// The destructure releases resources associated with the command stream.
-    ~radeon_gem_command_stream() throw();
+    ~radeon_gem_command_stream();
 
     /// Emit the command stream for execution.
-    void emit();
+    void emit() const;
 
     /// Append a double word to the end of the instruction buffer.
     /// \param data 32-bit word to append.
@@ -80,5 +80,5 @@ protected:
     /// Maps an buffer object handle to an index in the relocations chunk.
     std::unordered_map<std::uint32_t,std::uint32_t> _reloc_map;
     /// The unique id of this command stream.
-    std::uint32_t _id;
+    const std::uint32_t _id;
 };

@@ -82,7 +82,7 @@ void* radeon_gem_buffer_object::mmap(uint64_t offset, uint64_t size)
 }
 
 #if 0
-void radeon_gem_buffer_object::set_domain(uint32_t read_domains, uint32_t write_domain)
+void radeon_gem_buffer_object::set_domain(uint32_t read_domains, uint32_t write_domain) const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_SET_DOMAIN.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -104,7 +104,7 @@ void radeon_gem_buffer_object::set_domain(uint32_t read_domains, uint32_t write_
 }
 #endif
 
-void radeon_gem_buffer_object::wait_idle()
+void radeon_gem_buffer_object::wait_idle() const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_WAIT_IDLE.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -123,7 +123,7 @@ void radeon_gem_buffer_object::wait_idle()
         throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_GEM_WAIT_IDLE");
 }
 
-uint32_t radeon_gem_buffer_object::busy()
+uint32_t radeon_gem_buffer_object::busy() const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_BUSY.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -144,7 +144,7 @@ uint32_t radeon_gem_buffer_object::busy()
     return args.domain;
 }
 
-void radeon_gem_buffer_object::pread(uint64_t offset, uint64_t size, void* ptr)
+void radeon_gem_buffer_object::pread(uint64_t offset, uint64_t size, void* ptr) const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_PREAD.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -166,7 +166,7 @@ void radeon_gem_buffer_object::pread(uint64_t offset, uint64_t size, void* ptr)
         throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_GEM_PREAD");
 }
 
-void radeon_gem_buffer_object::pwrite(uint64_t offset, uint64_t size, const void* ptr)
+void radeon_gem_buffer_object::pwrite(uint64_t offset, uint64_t size, const void* ptr) const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_PWRITE.
     /// It may throw a std::system_error exception wrapping the error returned

@@ -1,6 +1,5 @@
 #include "dri_device.hpp"
 
-#include <iostream>
 #include <system_error>
 
 #include <sys/types.h>
@@ -15,20 +14,9 @@ dri_device::dri_device(const char* path)
     open(path);
 }
 
-dri_device::~dri_device() throw()
+dri_device::~dri_device()
 {
-    try {
-        if (_fd != -1) close();
-    }
-    catch (system_error& e) {
-        // destructor is no-throw
-#if !defined(NDEBUG)
-        cerr << e.what()
-             << " : "
-             << e.code().message()
-             << endl;
-#endif
-    }
+    if (_fd != -1) close();
 }
 
 void dri_device::open(const char* path)
@@ -42,12 +30,9 @@ void dri_device::open(const char* path)
 
 void dri_device::close()
 {
-    if (_fd != -1)
-    {
-        int r = ::close(_fd);
-        if (r != 0)
-            throw system_error(error_code(errno, system_category()), "close");
+    int r = ::close(_fd);
+    if (r != 0)
+        throw system_error(error_code(errno, system_category()), "close");
 
-        _fd = -1;
-    }
+    _fd = -1;
 }

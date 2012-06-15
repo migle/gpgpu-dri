@@ -1,7 +1,6 @@
 #include "radeon_gem_command_stream.hpp"
 
 #include <cstring>
-#include <iostream>
 #include <system_error>
 
 #include <sys/ioctl.h>
@@ -31,12 +30,12 @@ radeon_gem_command_stream::radeon_gem_command_stream(radeon_device const& dev)
 {
 }
 
-radeon_gem_command_stream::~radeon_gem_command_stream() throw()
+radeon_gem_command_stream::~radeon_gem_command_stream()
 {
     release_id(_id);
 }
 
-void radeon_gem_command_stream::emit()
+void radeon_gem_command_stream::emit() const
 {
     // Two chunks: the instruction buffer and the relocations.
     drm_radeon_cs_chunk chunks[2];
