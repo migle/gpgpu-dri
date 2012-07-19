@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
             void* ptr = bo.mmap(0, 4096);
             std::memset(ptr, 0, 4096);
             bo.munmap();
+            bo.wait_idle();
         }
         std::cout << 2 << std::endl;
 
@@ -44,55 +45,52 @@ int main(int argc, char* argv[])
         ///     CP. One of the ways is (fence/time stamp write back to scratch
         ///     register) which is often used to confirm some packets have been
         ///     processed by CP.
-        {
-            // Fence, write 32-bit data.
-            cs.write({
-                PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
-                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(5),
-                0u & ~0x3u, // lower 32 bits of address
-                DATA_SEL(1) | INT_SEL(0) | ((0ul >> 32) & 0xffu), // upper 32-39
-                0x89abcdef,
-                0x01234567
-                });
-            cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
 
-            // Fence, write 64-bit data.
-            cs.write({
-                PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
-                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(5),
-                16u & ~0x3u, // lower 32 bits of address
-                DATA_SEL(2) | INT_SEL(0) | ((16ul >> 32) & 0xffu), // upper 32-39
-                0x89abcdef,
-                0x01234567
-                });
-            cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
+        // Fence, write 32-bit data.
+        cs.write({
+            PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
+            EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(5),
+            0u & ~0x3u, // lower 32 bits of address
+            DATA_SEL(1) | INT_SEL(0) | ((0ul >> 32) & 0xffu), // upper 32-39
+            0x89abcdef,
+            0x01234567
+            });
+        cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
 
-            // Write 64-bit timestamp.
-            cs.write({
-                PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
-                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT_TS) | EVENT_INDEX(5),
-                24u & ~0x3u, // lower 32 bits of address
-                DATA_SEL(3) | INT_SEL(0) | ((24ul >> 32) & 0xffu), // upper 32-39
-                0x89abcdef,
-                0x01234567
-                });
-            cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
-        }
-        std::cout << 4 << std::endl;
+        // Fence, write 64-bit data.
+        cs.write({
+            PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
+            EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(5),
+            16u & ~0x3u, // lower 32 bits of address
+            DATA_SEL(2) | INT_SEL(0) | ((16ul >> 32) & 0xffu), // upper 32-39
+            0x89abcdef,
+            0x01234567
+            });
+        cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
+
+        // Write 64-bit timestamp.
+        cs.write({
+            PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
+            EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT_TS) | EVENT_INDEX(5),
+            24u & ~0x3u, // lower 32 bits of address
+            DATA_SEL(3) | INT_SEL(0) | ((24ul >> 32) & 0xffu), // upper 32-39
+            0x89abcdef,
+            0x01234567
+            });
+        cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
 
         // Emit the command stream.
+        std::cout << 4 << std::endl;
         cs.emit();
         std::cout << 5 << std::endl;
 
-        // Wait until the BO is idle.
-        bo.wait_idle();
-        std::cout << 6 << std::endl;
-
-        // Wait for user input.
-        {
-            char c;
-            std::cin >> c;
-        }
+        // Wait while the BO is busy.
+        //bo.wait_idle();
+        //while (bo.busy()) {
+        //    std::cout << '.' << std::flush;
+        //    sleep(1);
+        //}
+        //std::cout << '\n' << 6 << std::endl;
 
         // Map the BO and read back the result.
         {
