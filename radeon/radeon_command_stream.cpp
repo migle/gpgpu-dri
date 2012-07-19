@@ -105,7 +105,8 @@ void radeon_command_stream::write_reloc(
         _relocs[p->second].flags |= flags;
     }
 
-    write({ PACKET3(PACKET3_NOP, 0), p->second });
+    const uint32_t stride = sizeof(drm_radeon_cs_reloc) / sizeof(uint32_t);
+    write({ PACKET3(PACKET3_NOP, 0), p->second * stride });
 }
 
 void radeon_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
