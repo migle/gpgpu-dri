@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 
         // Create a single, small BO for communication with the GPU.
         radeon_buffer_object bo(dev, 4096);
-        std::cout << 1 << std::endl;
+        std::cout << 1 << ' ' << bo.handle() << std::endl;
         // Map the BO and initialize it to zero.
         {
             void* ptr = bo.mmap(0, 4096);
@@ -50,45 +50,49 @@ int main(int argc, char* argv[])
             std::uint64_t address0 = 16;
             cs.write({
                 PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
-                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT_TS) | EVENT_INDEX(1),
+                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(5),
                 std::uint32_t(address0) & ~3u,
                 DATA_SEL(1) | INT_SEL(0) | std::uint32_t((address0 >> 32u) & 0xffu),
                 0x89abcdef,
                 0x01234567
                 });
-            cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
+            cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
 
-#if 0
             // Fence, write 64-bit data.
             std::uint64_t address1 = 32;
             cs.write({
                 PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
-                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT_TS) | EVENT_INDEX(2),
+                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(5),
                 std::uint32_t(address1) & ~3u,
                 DATA_SEL(2) | INT_SEL(0) | std::uint32_t((address1 >> 32u) & 0xffu),
                 0x89abcdef,
                 0x01234567
                 });
-            cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
+            cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
 
             // Write 64-bit timestamp.
             std::uint64_t address2 = 48;
             cs.write({
                 PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
-                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT_TS) | EVENT_INDEX(3),
+                EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT_TS) | EVENT_INDEX(5),
                 std::uint32_t(address2) & ~3u,
                 DATA_SEL(3) | INT_SEL(0) | std::uint32_t((address2 >> 32u) & 0xffu),
                 0x89abcdef,
                 0x01234567
                 });
-            cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
-#endif
+            cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
         }
         std::cout << 4 << std::endl;
 
         // Emit the command stream.
         cs.emit();
         std::cout << 5 << std::endl;
+
+        // Wait for user input.
+        {
+            char c;
+            std::cin >> c;
+        }
 
         // Map the BO and read back the result.
         {
