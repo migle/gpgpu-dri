@@ -90,13 +90,12 @@ void radeon_command_stream::write_reloc(
     if (p == _reloc_map.end())
     {
         p = _reloc_map.insert(make_pair(handle, uint32_t(_relocs.size()))).first;
-        _relocs.push_back(
-            drm_radeon_cs_reloc {
-                handle,
-                read_domains,
-                write_domain,
-                flags
-            });
+        drm_radeon_cs_reloc reloc;
+        reloc.handle = handle;
+        reloc.read_domains = read_domains;
+        reloc.write_domain = write_domain;
+        reloc.flags = flags;
+        _relocs.push_back(reloc);
     }
     else
     {
