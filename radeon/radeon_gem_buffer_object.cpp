@@ -114,7 +114,7 @@ void radeon_gem_buffer_object::wait_idle() const
 
     args.handle = _handle;
 
-    // Don't be put away by a simple EINTR or EAGAIN...
+    // Repeat while EBUSY or EINTR or EAGAIN.
     int r;
     do {
         r = ioctl(device().descriptor(), DRM_IOCTL_RADEON_GEM_WAIT_IDLE, &args);
