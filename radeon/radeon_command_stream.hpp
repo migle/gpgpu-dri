@@ -100,6 +100,9 @@ public:
         { return { *this, offset }; }
 
 protected:
+    /// The size in double words of the relocation structure.
+    static const std::uint32_t reloc_size =
+        sizeof(drm_radeon_cs_reloc) / sizeof(std::uint32_t);
     /// This mask allows us to generate a distinct id for each command stream.
     static std::atomic<std::uint32_t> _used_id;
     /// This function generates an unused id for a command stream.
@@ -112,6 +115,8 @@ protected:
     std::vector<std::uint32_t> _ib;
     /// The relocations chunk.
     std::vector<drm_radeon_cs_reloc> _relocs;
+    /// The flags chunk.
+    std::uint32_t _flags[2];
     /// Maps an buffer object handle to an index in the relocations chunk.
     std::unordered_map<std::uint32_t,std::uint32_t> _reloc_map;
     /// The unique id of this command stream.

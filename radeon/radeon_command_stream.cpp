@@ -10,6 +10,16 @@
 
 #include "r600d.h"
 
+#if !defined(RADEON_CHUNK_ID_FLAGS)
+#define RADEON_CHUNK_ID_FLAGS       0x03
+
+#define RADEON_CS_KEEP_TILING_FLAGS 0x01
+#define RADEON_CS_USE_VM            0x02
+
+#define RADEON_CS_RING_GFX          0
+#define RADEON_CS_RING_COMPUTE      1
+#endif
+
 using namespace std;
 
 std::atomic<uint32_t> radeon_command_stream::_used_id(0);
@@ -30,6 +40,7 @@ void radeon_command_stream::release_id(uint32_t id)
 radeon_command_stream::radeon_command_stream(radeon_device const& dev)
     : gem_command_stream(dev), _id(new_id())
 {
+    _flags[0] = _flags[1] = 0;
 }
 
 radeon_command_stream::~radeon_command_stream()
@@ -39,27 +50,31 @@ radeon_command_stream::~radeon_command_stream()
 
 void radeon_command_stream::emit() const
 {
-    // Two chunks: the instruction buffer and the relocations.
-    drm_radeon_cs_chunk chunks[2];
+    // Three chunks: instruction buffer, relocations and flags.
+    drm_radeon_cs_chunk chunks[3];
 
     chunks[0].chunk_id = RADEON_CHUNK_ID_IB;
     chunks[0].length_dw = _ib.size();
     chunks[0].chunk_data = _ib.empty() ? 0 : reinterpret_cast<uintptr_t>(&_ib.front());
     chunks[1].chunk_id = RADEON_CHUNK_ID_RELOCS;
-    chunks[1].length_dw = _relocs.size() * sizeof(drm_radeon_cs_reloc) / sizeof(uint32_t);
+    chunks[1].length_dw = _relocs.size() * reloc_size;
     chunks[1].chunk_data = _relocs.empty() ? 0 : reinterpret_cast<uintptr_t>(&_relocs.front());
+    chunks[2].chunk_id = RADEON_CHUNK_ID_FLAGS;
+    chunks[2].length_dw = 2;
+    chunks[2].chunk_data = reinterpret_cast<uintptr_t>(&_flags[0]);
 
     // The pointers to these two chunks are with triple indirection (!)
-    uint64_t chunk_array[2];
+    uint64_t chunk_array[3];
 
     chunk_array[0] = reinterpret_cast<uintptr_t>(&chunks[0]);
     chunk_array[1] = reinterpret_cast<uintptr_t>(&chunks[1]);
+    chunk_array[2] = reinterpret_cast<uintptr_t>(&chunks[2]);
 
     // Finally, fill in the arguments for the ioctl.
     drm_radeon_cs args;
     memset(&args, 0, sizeof(args));
 
-    args.num_chunks = 2;
+    args.num_chunks = 3;
     args.cs_id = _id;
     args.chunks = reinterpret_cast<uintptr_t>(chunk_array);
 
@@ -104,8 +119,7 @@ void radeon_command_stream::write_reloc(
         _relocs[p->second].flags |= flags;
     }
 
-    const uint32_t stride = sizeof(drm_radeon_cs_reloc) / sizeof(uint32_t);
-    write({ PACKET3(PACKET3_NOP, 0), p->second * stride });
+    write({ PACKET3(PACKET3_NOP, 0), p->second * reloc_size });
 }
 
 void radeon_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
