@@ -24,12 +24,13 @@ int main(int argc, char* argv[])
         radeon_device dev(argv[1], false);
 
         // Create a single, small BO for communication with the GPU.
-        radeon_buffer_object bo(dev, 4096);
+        std::uint32_t bo_size = 4 << 10;
+        radeon_buffer_object bo(dev, bo_size);
         std::cout << 1 << ' ' << bo.handle() << std::endl;
         // Map the BO and initialize it to zero.
         {
-            void* ptr = bo.mmap(0, 4096);
-            std::memset(ptr, 0, 4096);
+            void* ptr = bo.mmap(0, bo_size);
+            std::memset(ptr, 0, bo_size);
             bo.munmap();
             bo.wait_idle();
         }
@@ -55,8 +56,10 @@ int main(int argc, char* argv[])
             0x89abcdef,
             0x01234567
             });
+        //cs.write_reloc(bo.handle());
         cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
 
+#if 0
         // Fence, write 64-bit data.
         cs.write({
             PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
@@ -66,7 +69,8 @@ int main(int argc, char* argv[])
             0x89abcdef,
             0x01234567
             });
-        cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
+        //cs.write_reloc(bo.handle());
+        cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
 
         // Write 64-bit timestamp.
         cs.write({
@@ -77,7 +81,9 @@ int main(int argc, char* argv[])
             0x89abcdef,
             0x01234567
             });
-        cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
+        //cs.write_reloc(bo.handle());
+        cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
+#endif
 
         // Emit the command stream.
         std::cout << 4 << std::endl;
@@ -91,6 +97,9 @@ int main(int argc, char* argv[])
         //    sleep(1);
         //}
         //std::cout << '\n' << 6 << std::endl;
+
+        // Wait for user input
+        //{ char c; std::cin >> c; }
 
         // Map the BO and read back the result.
         {
