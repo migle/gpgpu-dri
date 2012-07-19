@@ -1,5 +1,6 @@
 #include <cstring>
 #include <iostream>
+#include <iomanip>
 #include <system_error>
 
 #include "radeon_device.hpp"
@@ -48,7 +49,7 @@ int main(int argc, char* argv[])
             // Fence, write 32-bit data.
             std::uint64_t address0 = 16;
             cs.write({
-                PACKET3(PACKET3_EVENT_WRITE_EOP, 3),
+                PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
                 EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT_TS) | EVENT_INDEX(1),
                 std::uint32_t(address0) & ~3u,
                 DATA_SEL(1) | INT_SEL(0) | std::uint32_t((address0 >> 32u) & 0xffu),
@@ -93,6 +94,7 @@ int main(int argc, char* argv[])
         {
             std::uint64_t* ptr = static_cast<std::uint64_t*>(bo.mmap(0, 4096));
             std::cout
+                << std::hex
                 << ptr[0] << '\t'
                 << ptr[1] << '\t'
                 << ptr[2] << '\t'
