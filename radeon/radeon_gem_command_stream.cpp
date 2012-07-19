@@ -8,6 +8,8 @@
 #include <drm.h>
 #include <radeon_drm.h>
 
+#include "r600d.h"
+
 using namespace std;
 
 std::atomic<uint32_t> radeon_gem_command_stream::_used_id(0);
@@ -75,25 +77,26 @@ void radeon_gem_command_stream::emit() const
 }
 
 void radeon_gem_command_stream::write_reloc(
-        gem_buffer_object const& bo,
-        uint32_t read_domains,
-        uint32_t write_domain,
-        uint32_t flags)
+        std::uint32_t handle,
+        std::uint32_t read_domains,
+        std::uint32_t write_domain,
+        std::uint32_t flags)
 {
     /// This function will make sure that a single relocation record is
     /// sent to the kernel for each distinct buffer object.
     std::unordered_map<uint32_t, uint32_t>::iterator
-        p = _reloc_map.find(bo.handle());
+        p = _reloc_map.find(handle);
 
     if (p == _reloc_map.end())
     {
-        drm_radeon_cs_reloc reloc;
-        reloc.handle = bo.handle();
-        reloc.read_domains = read_domains;
-        reloc.write_domain = write_domain;
-        reloc.flags = flags;
-        _relocs.push_back(reloc);
-        p = _reloc_map.insert(make_pair(bo.handle(), uint32_t(_relocs.size() - 1))).first;
+        p = _reloc_map.insert(make_pair(handle, uint32_t(_relocs.size()))).first;
+        _relocs.push_back(
+            drm_radeon_cs_reloc {
+                handle,
+                read_domains,
+                write_domain,
+                flags
+            });
     }
     else
     {
@@ -102,5 +105,50 @@ void radeon_gem_command_stream::write_reloc(
         _relocs[p->second].flags |= flags;
     }
 
-    *this << { 0xc0001000u, p->second };
+    write({ 0xc0001000, p->second });
+}
+
+void radeon_gem_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
+{
+    if (_ib.empty()) reserve(n + 2);
+
+    /// This function will select the appropriate PM4 packet, either a type-3
+    /// or a type-0 packet for setting the register, as different sets of
+    /// registers require a slightly different command.
+
+    if (offset >= PACKET3_SET_CONFIG_REG_OFFSET && offset < PACKET3_SET_CONFIG_REG_END) {
+        _ib.push_back(PACKET3(PACKET3_SET_CONFIG_REG, (n + 1)));
+        _ib.push_back((offset - PACKET3_SET_CONFIG_REG_OFFSET) >> 2);
+    }
+    else if (offset >= PACKET3_SET_CONTEXT_REG_OFFSET && offset < PACKET3_SET_CONTEXT_REG_END) {
+        _ib.push_back(PACKET3(PACKET3_SET_CONTEXT_REG, (n + 1)));
+        _ib.push_back((offset - PACKET3_SET_CONTEXT_REG_OFFSET) >> 2);
+    }
+    else if (offset >= PACKET3_SET_RESOURCE_OFFSET && offset < PACKET3_SET_RESOURCE_END) {
+        _ib.push_back(PACKET3(PACKET3_SET_RESOURCE, (n + 1)));
+        _ib.push_back((offset - PACKET3_SET_RESOURCE_OFFSET) >> 2);
+    }
+    else if (offset >= PACKET3_SET_SAMPLER_OFFSET && offset < PACKET3_SET_SAMPLER_END) {
+        _ib.push_back(PACKET3(PACKET3_SET_SAMPLER, (n + 1)));
+        _ib.push_back((offset - PACKET3_SET_SAMPLER_OFFSET) >> 2);
+    }
+    else if (offset >= PACKET3_SET_CTL_CONST_OFFSET && offset < PACKET3_SET_CTL_CONST_END) {
+        _ib.push_back(PACKET3(PACKET3_SET_CTL_CONST, (n + 1)));
+        _ib.push_back((offset - PACKET3_SET_CTL_CONST_OFFSET) >> 2);
+    }
+    else if (offset >= PACKET3_SET_ALU_CONST_OFFSET && offset < PACKET3_SET_ALU_CONST_END) {
+        _ib.push_back(PACKET3(PACKET3_SET_ALU_CONST, (n + 1)));
+        _ib.push_back((offset - PACKET3_SET_ALU_CONST_OFFSET) >> 2);
+    }
+    else if (offset >= PACKET3_SET_BOOL_CONST_OFFSET && offset < PACKET3_SET_BOOL_CONST_END) {
+        _ib.push_back(PACKET3(PACKET3_SET_BOOL_CONST, (n + 1)));
+        _ib.push_back((offset - PACKET3_SET_BOOL_CONST_OFFSET) >> 2);
+    }
+    else if (offset >= PACKET3_SET_LOOP_CONST_OFFSET && offset < PACKET3_SET_LOOP_CONST_END) {
+        _ib.push_back(PACKET3(PACKET3_SET_LOOP_CONST, (n + 1)));
+        _ib.push_back((offset - PACKET3_SET_LOOP_CONST_OFFSET) >> 2);
+    }
+    else {
+        _ib.push_back(PACKET0(offset, (n - 1)));
+    }
 }
