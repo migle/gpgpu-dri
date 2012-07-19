@@ -105,7 +105,7 @@ void radeon_command_stream::write_reloc(
         _relocs[p->second].flags |= flags;
     }
 
-    write({ 0xc0001000, p->second });
+    write({ PACKET3(PACKET3_NOP, 0), p->second });
 }
 
 void radeon_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
@@ -116,39 +116,48 @@ void radeon_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
     /// or a type-0 packet for setting the register, as different sets of
     /// registers require a slightly different command.
 
-    if (offset >= PACKET3_SET_CONFIG_REG_OFFSET && offset < PACKET3_SET_CONFIG_REG_END) {
-        _ib.push_back(PACKET3(PACKET3_SET_CONFIG_REG, (n + 1)));
-        _ib.push_back((offset - PACKET3_SET_CONFIG_REG_OFFSET) >> 2);
-    }
-    else if (offset >= PACKET3_SET_CONTEXT_REG_OFFSET && offset < PACKET3_SET_CONTEXT_REG_END) {
-        _ib.push_back(PACKET3(PACKET3_SET_CONTEXT_REG, (n + 1)));
-        _ib.push_back((offset - PACKET3_SET_CONTEXT_REG_OFFSET) >> 2);
-    }
-    else if (offset >= PACKET3_SET_RESOURCE_OFFSET && offset < PACKET3_SET_RESOURCE_END) {
-        _ib.push_back(PACKET3(PACKET3_SET_RESOURCE, (n + 1)));
-        _ib.push_back((offset - PACKET3_SET_RESOURCE_OFFSET) >> 2);
-    }
-    else if (offset >= PACKET3_SET_SAMPLER_OFFSET && offset < PACKET3_SET_SAMPLER_END) {
-        _ib.push_back(PACKET3(PACKET3_SET_SAMPLER, (n + 1)));
-        _ib.push_back((offset - PACKET3_SET_SAMPLER_OFFSET) >> 2);
-    }
-    else if (offset >= PACKET3_SET_CTL_CONST_OFFSET && offset < PACKET3_SET_CTL_CONST_END) {
-        _ib.push_back(PACKET3(PACKET3_SET_CTL_CONST, (n + 1)));
-        _ib.push_back((offset - PACKET3_SET_CTL_CONST_OFFSET) >> 2);
-    }
-    else if (offset >= PACKET3_SET_ALU_CONST_OFFSET && offset < PACKET3_SET_ALU_CONST_END) {
-        _ib.push_back(PACKET3(PACKET3_SET_ALU_CONST, (n + 1)));
-        _ib.push_back((offset - PACKET3_SET_ALU_CONST_OFFSET) >> 2);
-    }
-    else if (offset >= PACKET3_SET_BOOL_CONST_OFFSET && offset < PACKET3_SET_BOOL_CONST_END) {
-        _ib.push_back(PACKET3(PACKET3_SET_BOOL_CONST, (n + 1)));
-        _ib.push_back((offset - PACKET3_SET_BOOL_CONST_OFFSET) >> 2);
-    }
-    else if (offset >= PACKET3_SET_LOOP_CONST_OFFSET && offset < PACKET3_SET_LOOP_CONST_END) {
-        _ib.push_back(PACKET3(PACKET3_SET_LOOP_CONST, (n + 1)));
-        _ib.push_back((offset - PACKET3_SET_LOOP_CONST_OFFSET) >> 2);
-    }
-    else {
-        _ib.push_back(PACKET0(offset, (n - 1)));
-    }
+    if (offset >= PACKET3_SET_CONFIG_REG_OFFSET && offset < PACKET3_SET_CONFIG_REG_END)
+        write({
+            PACKET3(PACKET3_SET_CONFIG_REG, (n + 1)),
+            (offset - PACKET3_SET_CONFIG_REG_OFFSET) >> 2
+        });
+    else if (offset >= PACKET3_SET_CONTEXT_REG_OFFSET && offset < PACKET3_SET_CONTEXT_REG_END)
+        write({
+            PACKET3(PACKET3_SET_CONTEXT_REG, (n + 1)),
+            (offset - PACKET3_SET_CONTEXT_REG_OFFSET) >> 2
+        });
+    else if (offset >= PACKET3_SET_RESOURCE_OFFSET && offset < PACKET3_SET_RESOURCE_END)
+        write({
+            PACKET3(PACKET3_SET_RESOURCE, (n + 1)),
+            (offset - PACKET3_SET_RESOURCE_OFFSET) >> 2
+        });
+    else if (offset >= PACKET3_SET_SAMPLER_OFFSET && offset < PACKET3_SET_SAMPLER_END)
+        write({
+            PACKET3(PACKET3_SET_SAMPLER, (n + 1)),
+            (offset - PACKET3_SET_SAMPLER_OFFSET) >> 2
+        });
+    else if (offset >= PACKET3_SET_CTL_CONST_OFFSET && offset < PACKET3_SET_CTL_CONST_END)
+        write({
+            PACKET3(PACKET3_SET_CTL_CONST, (n + 1)),
+            (offset - PACKET3_SET_CTL_CONST_OFFSET) >> 2
+        });
+    else if (offset >= PACKET3_SET_ALU_CONST_OFFSET && offset < PACKET3_SET_ALU_CONST_END)
+        write({
+            PACKET3(PACKET3_SET_ALU_CONST, (n + 1)),
+            (offset - PACKET3_SET_ALU_CONST_OFFSET) >> 2
+        });
+    else if (offset >= PACKET3_SET_BOOL_CONST_OFFSET && offset < PACKET3_SET_BOOL_CONST_END)
+        write({
+            PACKET3(PACKET3_SET_BOOL_CONST, (n + 1)),
+            (offset - PACKET3_SET_BOOL_CONST_OFFSET) >> 2
+        });
+    else if (offset >= PACKET3_SET_LOOP_CONST_OFFSET && offset < PACKET3_SET_LOOP_CONST_END)
+        write({
+            PACKET3(PACKET3_SET_LOOP_CONST, (n + 1)),
+            (offset - PACKET3_SET_LOOP_CONST_OFFSET) >> 2
+        });
+    else
+        write({
+            PACKET0(offset, (n - 1))
+        });
 }
