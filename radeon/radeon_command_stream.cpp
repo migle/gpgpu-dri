@@ -118,42 +118,42 @@ void radeon_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
 
     if (offset >= PACKET3_SET_CONFIG_REG_OFFSET && offset < PACKET3_SET_CONFIG_REG_END)
         write({
-            PACKET3(PACKET3_SET_CONFIG_REG, (n + 1)),
+            PACKET3(PACKET3_SET_CONFIG_REG, n),
             (offset - PACKET3_SET_CONFIG_REG_OFFSET) >> 2
         });
     else if (offset >= PACKET3_SET_CONTEXT_REG_OFFSET && offset < PACKET3_SET_CONTEXT_REG_END)
         write({
-            PACKET3(PACKET3_SET_CONTEXT_REG, (n + 1)),
+            PACKET3(PACKET3_SET_CONTEXT_REG, n),
             (offset - PACKET3_SET_CONTEXT_REG_OFFSET) >> 2
         });
     else if (offset >= PACKET3_SET_RESOURCE_OFFSET && offset < PACKET3_SET_RESOURCE_END)
         write({
-            PACKET3(PACKET3_SET_RESOURCE, (n + 1)),
+            PACKET3(PACKET3_SET_RESOURCE, n),
             (offset - PACKET3_SET_RESOURCE_OFFSET) >> 2
         });
     else if (offset >= PACKET3_SET_SAMPLER_OFFSET && offset < PACKET3_SET_SAMPLER_END)
         write({
-            PACKET3(PACKET3_SET_SAMPLER, (n + 1)),
+            PACKET3(PACKET3_SET_SAMPLER, n),
             (offset - PACKET3_SET_SAMPLER_OFFSET) >> 2
         });
     else if (offset >= PACKET3_SET_CTL_CONST_OFFSET && offset < PACKET3_SET_CTL_CONST_END)
         write({
-            PACKET3(PACKET3_SET_CTL_CONST, (n + 1)),
+            PACKET3(PACKET3_SET_CTL_CONST, n),
             (offset - PACKET3_SET_CTL_CONST_OFFSET) >> 2
         });
     else if (offset >= PACKET3_SET_ALU_CONST_OFFSET && offset < PACKET3_SET_ALU_CONST_END)
         write({
-            PACKET3(PACKET3_SET_ALU_CONST, (n + 1)),
+            PACKET3(PACKET3_SET_ALU_CONST, n),
             (offset - PACKET3_SET_ALU_CONST_OFFSET) >> 2
         });
     else if (offset >= PACKET3_SET_BOOL_CONST_OFFSET && offset < PACKET3_SET_BOOL_CONST_END)
         write({
-            PACKET3(PACKET3_SET_BOOL_CONST, (n + 1)),
+            PACKET3(PACKET3_SET_BOOL_CONST, n),
             (offset - PACKET3_SET_BOOL_CONST_OFFSET) >> 2
         });
     else if (offset >= PACKET3_SET_LOOP_CONST_OFFSET && offset < PACKET3_SET_LOOP_CONST_END)
         write({
-            PACKET3(PACKET3_SET_LOOP_CONST, (n + 1)),
+            PACKET3(PACKET3_SET_LOOP_CONST, n),
             (offset - PACKET3_SET_LOOP_CONST_OFFSET) >> 2
         });
     else
