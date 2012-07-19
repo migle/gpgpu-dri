@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <atomic>
+#include <initializer_list>
 #include <unordered_map>
 #include <vector>
 
@@ -31,20 +32,16 @@ public:
     /// \param data 32-bit word to append.
     void write(std::uint32_t data)
     {
-        if (_ib.empty())
-            _ib.reserve(0x200);
+        if (_ib.empty()) _ib.reserve(0x200);
         _ib.push_back(data);
     }
-    /// Append data to the end of the instruction buffer.
-    /// The size of the data is measured in number of 32-bit words.
-    /// \param p Pointer to the data to append to the IB.
-    /// \param n Number of double words to append.
-    void write(void* p, std::size_t n)
+    /// Append data from an initializer list of double words to the end of the
+    /// instruction buffer.
+    /// \param data Initializer list of 32-bit words to append.
+    void write(std::initializer_list<std::uint32_t> data)
     {
-        if (_ib.empty())
-            _ib.reserve((n + 0x1ffu) & ~0x1ffu);
-        std::uint32_t* ptr = static_cast<std::uint32_t*>(p);
-        _ib.insert(_ib.end(), ptr, ptr + n);
+        if (_ib.empty()) _ib.reserve((data.size() + 0x1ffu) & ~0x1ffu);
+        _ib.insert(_ib.end(), data.begin(), data.end());
     }
     /// Append a relocation packet to the end of the instruction buffer.
     void write_reloc(
@@ -53,14 +50,28 @@ public:
         uint32_t write_domain = 0,
         uint32_t flags = 0);
 
-    /// iostream-like output operator for appending a dword to the end of the
-    /// instruction buffer.
-    /// \param cs The command stream to write to.
-    /// \param dw The dword to write.
+    /// iostream-like output operator for appending a double word to the end of
+    /// the instruction buffer.
+    /// \param cs The command stream to append to.
+    /// \param dw The double word to append.
     /// \returns The same command stream, cs.
-    friend radeon_gem_command_stream& operator << (radeon_gem_command_stream& cs, std::uint32_t dw)
+    friend radeon_gem_command_stream&
+    operator << (radeon_gem_command_stream& cs, std::uint32_t dw)
     {
-        cs.write(dw);
+        if (_ib.empty()) _ib.reserve(0x200);
+        _ib.push_back(data);
+        return cs;
+    }
+    /// iostream-like output operator for appending a list of double words from
+    /// an initializer list to the end of the instruction buffer.
+    /// \param cs The command stream to write to.
+    /// \param ls The list of double words to append.
+    /// \returns The same command stream, cs.
+    friend radeon_gem_command_stream&
+    operator << (radeon_gem_command_stream& cs, std::initializer_list<std::uint32_t> ls)
+    {
+        if (_ib.empty()) _ib.reserve((data.size() + 0x1ffu) & ~0x1ffu);
+        _ib.insert(_ib.end(), data.begin(), data.end());
         return cs;
     }
 

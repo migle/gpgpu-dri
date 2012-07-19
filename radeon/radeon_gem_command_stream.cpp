@@ -102,6 +102,5 @@ void radeon_gem_command_stream::write_reloc(
         _relocs[p->second].flags |= flags;
     }
 
-    write(0xc0001000);
-    write(p->second);
+    *this << { 0xc0001000u, p->second };
 }
