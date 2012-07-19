@@ -39,6 +39,47 @@ int main(int argc, char* argv[])
         std::cout << 3 << std::endl;
 
         {
+#if 0
+            // This would be simple, but the CS parser in Linux does not support
+            // the IT opcode of MEM_WRITE.
+
+            // We start with an easier MEM_WRITE of 64-bit data to QWORD-aligned location.
+            cs.write({
+                PACKET3(PACKET3_MEM_WRITE, 3),
+                0u & ~0x3u, // lower 32 bits of address
+                (0 << 18) | // DATA32
+                (0 << 17) | // WR_CONFIRM
+                (0 << 16) | // CNTR_SEL
+                ((0ul >> 32) & 0xff), // upper 32-39 bits of address
+                0x9abcdef0,
+                0x12345678
+                });
+
+            // Then a MEM_WRITE of 32-bit data to a DWORD-aligned location.
+            cs.write({
+                PACKET3(PACKET3_MEM_WRITE, 3),
+                12u & ~0x3u, // lower 32 bits of address
+                (1 << 18) | // DATA32
+                (0 << 17) | // WR_CONFIRM
+                (0 << 16) | // CNTR_SEL
+                ((0ul >> 32) & 0xff), // upper 32-39 bits of address
+                0x9abcdef1,
+                0x12345678
+                });
+
+            // Then a MEM_WRITE of the 64-bit timestamp counter of the GPU.
+            cs.write({
+                PACKET3(PACKET3_MEM_WRITE, 3),
+                24& ~0x3u, // lower 32 bits of address
+                (0 << 18) | // DATA32
+                (0 << 17) | // WR_CONFIRM
+                (1 << 16) | // CNTR_SEL
+                ((0ul >> 32) & 0xff), // upper 32-39 bits of address
+                0x9abcdef2,
+                0x12345678
+                });
+#endif
+
             /// According to AMD Radeon R6xx/R7xx Acceleration document version 1.0
             /// section 4.4.1 on page 21:
             ///     Driver can know that submitted PM4 packets have been fetched by
@@ -46,6 +87,7 @@ int main(int argc, char* argv[])
             ///     register) which is often used to confirm some packets have been
             ///     processed by CP.
 
+#if 0
             // Fence, write 32-bit data.
             std::uint64_t address0 = 16;
             cs.write({
@@ -81,6 +123,7 @@ int main(int argc, char* argv[])
                 0x01234567
                 });
             cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
+#endif
         }
         std::cout << 4 << std::endl;
 
