@@ -6,7 +6,7 @@ LDFLAGS=$(shell pkg-config --libs libdrm libdrm_radeon)
 HEADERS=dri_device.hpp gem_buffer_object.hpp gem_command_stream.hpp radeon_device.hpp radeon_buffer_object.hpp radeon_command_stream.hpp
 SOURCES=dri_device.cpp gem_buffer_object.cpp gem_command_stream.cpp radeon_device.cpp radeon_buffer_object.cpp radeon_command_stream.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-TARGETS=test_buffer_object
+TARGETS=test_buffer_object test_command_stream
 
 all : $(TARGETS)
 
@@ -21,3 +21,5 @@ doc :
 %.o : %.cpp $(HEADERS)
 
 test_buffer_object : test_buffer_object.cpp $(OBJECTS)
+
+test_command_stream : test_command_stream.cpp $(OBJECTS)

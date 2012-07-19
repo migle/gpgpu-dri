@@ -2,3 +2,4 @@ html/
 latex/
 *.o
 test_buffer_object
+test_command_stream
