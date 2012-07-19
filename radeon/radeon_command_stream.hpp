@@ -15,15 +15,15 @@
 #include <radeon_drm.h>
 
 /// This class wraps an in-memory GEM command stream.
-class radeon_gem_command_stream : public gem_command_stream {
+class radeon_command_stream : public gem_command_stream {
 public:
     /// This constructor creates a command stream for a radeon device.
     /// This command stream is created in memory and when full, it can be
     /// sent for execution (emited) through the GEM.
     /// \param device The DRI device on which to create the object.
-    radeon_gem_command_stream(radeon_device const& device);
+    radeon_command_stream(radeon_device const& device);
     /// The destructure releases resources associated with the command stream.
-    ~radeon_gem_command_stream();
+    ~radeon_command_stream();
 
     /// Emit the command stream for execution.
     void emit() const;
@@ -77,7 +77,7 @@ public:
     /// assignment, as function arguments, etc.
     /// Given this, this syntax seems to be the most convenient.
     struct register_setter {
-        radeon_gem_command_stream& cs;  ///< Command stream for which to proxy.
+        radeon_command_stream& cs;  ///< Command stream for which to proxy.
         std::uint32_t offset;   ///< Offset of the first register in the series.
         /// Set the register at offset to the given double word.
         void operator = (std::uint32_t x) { cs.write_set_reg(offset, 1); cs.write(x); }

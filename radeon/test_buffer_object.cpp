@@ -3,7 +3,7 @@
 #include <system_error>
 
 #include "radeon_device.hpp"
-#include "radeon_gem_buffer_object.hpp"
+#include "radeon_buffer_object.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     try {
         radeon_device dev(argv[1], false);
         std::cout << 1 << std::endl;
-        radeon_gem_buffer_object bo(dev, 2<<20);
+        radeon_buffer_object bo(dev, 2<<20);
         std::cout << 2 << std::endl;
         {
             void* ptr = bo.mmap(0, 2<<20);

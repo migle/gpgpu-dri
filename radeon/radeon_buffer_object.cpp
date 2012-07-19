@@ -1,4 +1,4 @@
-#include "radeon_gem_buffer_object.hpp"
+#include "radeon_buffer_object.hpp"
 
 #include <cstring>
 #include <system_error>
@@ -10,7 +10,7 @@
 
 using namespace std;
 
-radeon_gem_buffer_object::radeon_gem_buffer_object(
+radeon_buffer_object::radeon_buffer_object(
         radeon_device const& device,
         uint64_t size,
         uint64_t alignment,
@@ -22,7 +22,7 @@ radeon_gem_buffer_object::radeon_gem_buffer_object(
     create(size, alignment, domains, flags);
 }
 
-void radeon_gem_buffer_object::create(
+void radeon_buffer_object::create(
         uint64_t size,
         uint64_t alignment,
         uint32_t domains,
@@ -51,7 +51,7 @@ void radeon_gem_buffer_object::create(
     _size = args.size;
 }
 
-void* radeon_gem_buffer_object::mmap(uint64_t offset, uint64_t size)
+void* radeon_buffer_object::mmap(uint64_t offset, uint64_t size)
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_MMAP and mmap.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -82,7 +82,7 @@ void* radeon_gem_buffer_object::mmap(uint64_t offset, uint64_t size)
 }
 
 #if 0
-void radeon_gem_buffer_object::set_domain(uint32_t read_domains, uint32_t write_domain) const
+void radeon_buffer_object::set_domain(uint32_t read_domains, uint32_t write_domain) const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_SET_DOMAIN.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -104,7 +104,7 @@ void radeon_gem_buffer_object::set_domain(uint32_t read_domains, uint32_t write_
 }
 #endif
 
-void radeon_gem_buffer_object::wait_idle() const
+void radeon_buffer_object::wait_idle() const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_WAIT_IDLE.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -123,7 +123,7 @@ void radeon_gem_buffer_object::wait_idle() const
         throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_GEM_WAIT_IDLE");
 }
 
-uint32_t radeon_gem_buffer_object::busy() const
+uint32_t radeon_buffer_object::busy() const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_BUSY.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -144,7 +144,7 @@ uint32_t radeon_gem_buffer_object::busy() const
     return args.domain;
 }
 
-void radeon_gem_buffer_object::pread(uint64_t offset, uint64_t size, void* ptr) const
+void radeon_buffer_object::pread(uint64_t offset, uint64_t size, void* ptr) const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_PREAD.
     /// It may throw a std::system_error exception wrapping the error returned
@@ -166,7 +166,7 @@ void radeon_gem_buffer_object::pread(uint64_t offset, uint64_t size, void* ptr) 
         throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_GEM_PREAD");
 }
 
-void radeon_gem_buffer_object::pwrite(uint64_t offset, uint64_t size, const void* ptr) const
+void radeon_buffer_object::pwrite(uint64_t offset, uint64_t size, const void* ptr) const
 {
     /// This member function uses DRM_IOCTL_RADEON_GEM_PWRITE.
     /// It may throw a std::system_error exception wrapping the error returned

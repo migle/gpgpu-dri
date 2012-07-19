@@ -1,4 +1,4 @@
-#include "radeon_gem_command_stream.hpp"
+#include "radeon_command_stream.hpp"
 
 #include <cstring>
 #include <system_error>
@@ -12,9 +12,9 @@
 
 using namespace std;
 
-std::atomic<uint32_t> radeon_gem_command_stream::_used_id(0);
+std::atomic<uint32_t> radeon_command_stream::_used_id(0);
 
-uint32_t radeon_gem_command_stream::new_id()
+uint32_t radeon_command_stream::new_id()
 {
     for (uint32_t id = 1; id != 0; id <<= 1)
         if ((_used_id.fetch_or(id) & id) == 0)
@@ -22,22 +22,22 @@ uint32_t radeon_gem_command_stream::new_id()
     throw std::bad_alloc();
 }
 
-void radeon_gem_command_stream::release_id(uint32_t id)
+void radeon_command_stream::release_id(uint32_t id)
 {
     _used_id &= ~id;
 }
 
-radeon_gem_command_stream::radeon_gem_command_stream(radeon_device const& dev)
+radeon_command_stream::radeon_command_stream(radeon_device const& dev)
     : gem_command_stream(dev), _id(new_id())
 {
 }
 
-radeon_gem_command_stream::~radeon_gem_command_stream()
+radeon_command_stream::~radeon_command_stream()
 {
     release_id(_id);
 }
 
-void radeon_gem_command_stream::emit() const
+void radeon_command_stream::emit() const
 {
     // Two chunks: the instruction buffer and the relocations.
     drm_radeon_cs_chunk chunks[2];
@@ -76,7 +76,7 @@ void radeon_gem_command_stream::emit() const
         throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_CS");
 }
 
-void radeon_gem_command_stream::write_reloc(
+void radeon_command_stream::write_reloc(
         std::uint32_t handle,
         std::uint32_t read_domains,
         std::uint32_t write_domain,
@@ -108,7 +108,7 @@ void radeon_gem_command_stream::write_reloc(
     write({ 0xc0001000, p->second });
 }
 
-void radeon_gem_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
+void radeon_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
 {
     if (_ib.empty()) reserve(n + 2);
 

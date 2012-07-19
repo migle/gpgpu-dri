@@ -8,7 +8,7 @@
 #include <radeon_drm.h>
 
 /// This class wraps a handle to a GEM buffer object of the radeon driver.
-class radeon_gem_buffer_object : public gem_buffer_object {
+class radeon_buffer_object : public gem_buffer_object {
 public:
     /// This constructor creates a GEM buffer object on a radeon device.
     /// \param device The DRI device on which to create the object.
@@ -16,7 +16,7 @@ public:
     /// \param alignment The BO alignment in bytes.
     /// \param domains The initial read/write domains of the BO.
     /// \param flags The BO creation flags.
-    radeon_gem_buffer_object(
+    radeon_buffer_object(
         radeon_device const& device,
         std::uint64_t size,
         std::uint64_t alignment = 0,
