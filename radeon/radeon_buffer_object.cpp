@@ -138,7 +138,7 @@ uint32_t radeon_buffer_object::busy() const
     do {
         r = ioctl(device().descriptor(), DRM_IOCTL_RADEON_GEM_BUSY, &args);
     } while (r == -1 && (errno == EINTR || errno == EAGAIN));
-    if (r == -1)
+    if (r == -1 && errno != EBUSY)
         throw system_error(error_code(errno, system_category()), "DRM_IOCTL_RADEON_GEM_BUSY");
 
     return args.domain;
