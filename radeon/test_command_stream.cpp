@@ -24,23 +24,33 @@ int main(int argc, char* argv[])
     try {
         std::cout << "Opening " << argv[1] << std::endl;
         radeon_device dev(argv[1], false);
+
         // Create a single, small BO for communication with the GPU.
-        std::uint32_t bo_size = 4 << 10;
-        radeon_buffer_object bo(dev, bo_size, RADEON_GEM_DOMAIN_VRAM);
+        std::uint32_t bo_size = 4 << 10, bo_domain = RADEON_GEM_DOMAIN_VRAM;
+        radeon_buffer_object bo(dev, bo_size, bo_domain);
+
+        // flink the BO, so it is visible to other processes.
         std::uint32_t bo_name = bo.flink();
         std::cout << "BO handle = " << bo.handle() << " size = " << bo_size << " name = " << bo_name << std::endl;
+
         // Map the BO and initialize it to zero.
         {
             void* ptr = bo.mmap(0, bo_size);
             std::memset(ptr, 0, bo_size);
             bo.munmap();
-            bo.wait_idle();
         }
+        bo.wait_idle();
         std::cout << "BO set to zero" << std::endl;
 
         // Create the CS for the GPU.
         radeon_command_stream cs(dev);
         std::cout << "CS id = " << cs.id() << std::endl;
+
+        // R6xx requires this packet at the start
+        //cs.write({ PACKET3(PACKET3_START_3D_CMDBUF, 0), 0 });
+        cs.write({ PACKET3(PACKET3_CONTEXT_CONTROL, 1), 0x80000000, 0x80000000 });
+
+        cs[WAIT_UNTIL] = { WAIT_2D_IDLE_bit | WAIT_3D_IDLE_bit };
 
         /// According to AMD Radeon R6xx/R7xx Acceleration document version 1.0
         /// section 4.4.1 on page 21:
@@ -49,6 +59,7 @@ int main(int argc, char* argv[])
         ///     register) which is often used to confirm some packets have been
         ///     processed by CP.
 
+#if 0
         // Fence, write 32-bit data.
         cs.write({
             PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
@@ -59,32 +70,36 @@ int main(int argc, char* argv[])
             0x01234567
             });
         //cs.write_reloc(bo.handle());
-        cs.write_reloc(bo.handle(), 0, RADEON_GEM_DOMAIN_VRAM);
+        cs.write_reloc(bo.handle(), 0, bo_domain);
+#endif
 
-#if 0
+#if 1
         // Fence, write 64-bit data.
         cs.write({
             PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
             EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(5),
             16u & ~0x3u, // lower 32 bits of address
-            DATA_SEL(2) | INT_SEL(0) | ((16ul >> 32) & 0xffu), // upper 32-39
+            DATA_SEL(2) | INT_SEL(2) | ((16ul >> 32) & 0xffu), // upper 32-39
             0x89abcdef,
             0x01234567
             });
         //cs.write_reloc(bo.handle());
-        cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
+        cs.write_reloc(bo.handle(), 0, bo_domain);
+#endif
 
+#if 0
         // Write 64-bit timestamp.
         cs.write({
             PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
+            //EVENT_TYPE(4) | EVENT_INDEX(5),
             EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT_TS) | EVENT_INDEX(5),
             24u & ~0x3u, // lower 32 bits of address
-            DATA_SEL(3) | INT_SEL(0) | ((24ul >> 32) & 0xffu), // upper 32-39
+            DATA_SEL(3) | INT_SEL(2) | ((24ul >> 32) & 0xffu), // upper 32-39
             0x89abcdef,
             0x01234567
             });
         //cs.write_reloc(bo.handle());
-        cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
+        cs.write_reloc(bo.handle(), 0, bo_domain);
 #endif
 
         // Dump the command stream.
@@ -96,11 +111,14 @@ int main(int argc, char* argv[])
 
         // Wait while the BO is busy.
         //bo.wait_idle();
-        //while (bo.busy()) {
-        //    std::cout << '.' << std::flush;
-        //    sleep(1);
-        //}
-        //std::cout << "\nBO is idle" << std::endl;
+        {
+            std::uint32_t d = 0;
+            while (d = bo.busy()) {
+                std::cout << ' ' << d << std::flush;
+                sleep(1);
+            }
+        }
+        std::cout << "\nBO is idle" << std::endl;
 
         // Wait for user input
         //{ char c; std::cin >> c; }
