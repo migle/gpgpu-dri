@@ -74,8 +74,8 @@ void radeon_command_stream::emit() const
     drm_radeon_cs args;
     memset(&args, 0, sizeof(args));
 
-    args.num_chunks = 3;
-    args.cs_id = _id;
+    args.num_chunks = 2;
+    //args.cs_id = _id;
     args.chunks = reinterpret_cast<uintptr_t>(chunk_array);
 
     /// This member function uses DRM_IOCTL_RADEON_CS.
