@@ -16,6 +16,15 @@ public:
     /// Access cached copy of the information on the GEM.
     drm_radeon_gem_info const& gem_info() const { return _gem_info; }
 
+    /// Start the CP? (invalid with KMS).
+    void cp_start() const;
+    /// Perform soft reset of the CP (invalid with KMS).
+    void cp_reset() const;
+    /// ? (invalid with KMS).
+    void cp_idle() const;
+    /// Resume the CP? (invalid with KMS).
+    void cp_resume() const;
+
 protected:
     /// Obtain information related to the Graphics Execution Manager (GEM).
     /// The GEM is a DRM concept. This structure contains information on
