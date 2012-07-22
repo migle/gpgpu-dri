@@ -3,10 +3,12 @@
 #include "gem_buffer_object.hpp"
 #include "gem_command_stream.hpp"
 #include "radeon_device.hpp"
+#include "hex_dump.hpp"
 
 #include <cstdint>
 #include <atomic>
 #include <initializer_list>
+#include <iostream>
 #include <unordered_map>
 #include <vector>
 
@@ -101,6 +103,16 @@ public:
     /// \returns Proxy \c register_setter object.
     register_setter operator [] (std::uint32_t offset)
         { return { *this, offset }; }
+
+    /// Dump the CS to an output stream.
+    /// \param os Output stream.
+    /// \param cs The CS object.
+    /// \returns The same output stream passed as \c os.
+    friend std::ostream& operator << (std::ostream& os, radeon_command_stream const& cs)
+    {
+        os << hex_dump<std::uint32_t>(&cs._ib[0], cs._ib.size());
+        return os;
+    }
 
 protected:
     /// The size in double words of the relocation structure.

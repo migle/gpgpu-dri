@@ -48,9 +48,7 @@ int main(int argc, char* argv[])
 
         // R6xx requires this packet at the start
         //cs.write({ PACKET3(PACKET3_START_3D_CMDBUF, 0), 0 });
-        cs.write({ PACKET3(PACKET3_CONTEXT_CONTROL, 1), 0x80000000, 0x80000000 });
-
-        cs[WAIT_UNTIL] = { WAIT_2D_IDLE_bit | WAIT_3D_IDLE_bit };
+        //cs.write({ PACKET3(PACKET3_CONTEXT_CONTROL, 1), 0x80000000, 0x80000000 });
 
         /// According to AMD Radeon R6xx/R7xx Acceleration document version 1.0
         /// section 4.4.1 on page 21:
@@ -77,9 +75,9 @@ int main(int argc, char* argv[])
         // Fence, write 64-bit data.
         cs.write({
             PACKET3(PACKET3_EVENT_WRITE_EOP, 4),
-            EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(5),
+            CACHE_FLUSH_AND_INV_EVENT, //EVENT_TYPE(CACHE_FLUSH_AND_INV_EVENT) | EVENT_INDEX(0),
             16u & ~0x3u, // lower 32 bits of address
-            DATA_SEL(2) | INT_SEL(2) | ((16ul >> 32) & 0xffu), // upper 32-39
+            DATA_SEL(2) | INT_SEL(0) | ((16ul >> 32) & 0xffu), // upper 32-39
             0x89abcdef,
             0x01234567
             });
@@ -103,7 +101,7 @@ int main(int argc, char* argv[])
 #endif
 
         // Dump the command stream.
-        //std::cout << "CS dump:\n" << cs << std::endl;
+        std::cout << "CS dump:\n" << cs << std::endl;
 
         // Emit the command stream.
         cs.emit();
