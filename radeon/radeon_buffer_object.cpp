@@ -13,13 +13,23 @@ using namespace std;
 radeon_buffer_object::radeon_buffer_object(
         radeon_device const& device,
         uint64_t size,
-        uint64_t alignment,
         uint32_t domains,
+        uint64_t alignment,
         uint32_t flags)
     : gem_buffer_object(device)
 {
-    /// This constructor is implemented using the create member function.
+    /// This constructor is implemented using the \c create member function.
     create(size, alignment, domains, flags);
+}
+
+radeon_buffer_object::radeon_buffer_object(
+        radeon_device const& device,
+        uint32_t name)
+    : gem_buffer_object(device)
+{
+    /// This constructor is implemented using the member function \c open of
+    /// the base class \c gem_buffer_object.
+    open(name);
 }
 
 void radeon_buffer_object::create(

@@ -21,12 +21,13 @@ int main(int argc, char* argv[])
     }
 
     try {
+        std::cout << "Opening " << argv[1] << std::endl;
         radeon_device dev(argv[1], false);
-
         // Create a single, small BO for communication with the GPU.
         std::uint32_t bo_size = 4 << 10;
-        radeon_buffer_object bo(dev, bo_size);
-        std::cout << 1 << ' ' << bo.handle() << std::endl;
+        radeon_buffer_object bo(dev, bo_size, RADEON_GEM_DOMAIN_VRAM);
+        std::uint32_t bo_name = bo.flink();
+        std::cout << "BO handle = " << bo.handle() << " size = " << bo_size << " name = " << bo_name << std::endl;
         // Map the BO and initialize it to zero.
         {
             void* ptr = bo.mmap(0, bo_size);
@@ -34,11 +35,11 @@ int main(int argc, char* argv[])
             bo.munmap();
             bo.wait_idle();
         }
-        std::cout << 2 << std::endl;
+        std::cout << "BO set to zero" << std::endl;
 
         // Create the CS for the GPU.
         radeon_command_stream cs(dev);
-        std::cout << 3 << std::endl;
+        std::cout << "CS id = " << cs.id() << std::endl;
 
         /// According to AMD Radeon R6xx/R7xx Acceleration document version 1.0
         /// section 4.4.1 on page 21:
@@ -85,10 +86,12 @@ int main(int argc, char* argv[])
         cs.write_reloc(bo.handle(), RADEON_GEM_DOMAIN_VRAM, RADEON_GEM_DOMAIN_VRAM);
 #endif
 
+        // Dump the command stream.
+        //std::cout << "CS dump:\n" << cs << std::endl;
+
         // Emit the command stream.
-        std::cout << 4 << std::endl;
         cs.emit();
-        std::cout << 5 << std::endl;
+        std::cout << "CS emitted" << std::endl;
 
         // Wait while the BO is busy.
         //bo.wait_idle();
@@ -96,7 +99,7 @@ int main(int argc, char* argv[])
         //    std::cout << '.' << std::flush;
         //    sleep(1);
         //}
-        //std::cout << '\n' << 6 << std::endl;
+        //std::cout << "\nBO is idle" << std::endl;
 
         // Wait for user input
         //{ char c; std::cin >> c; }
@@ -104,16 +107,17 @@ int main(int argc, char* argv[])
         // Map the BO and read back the result.
         {
             std::uint64_t* ptr = static_cast<std::uint64_t*>(bo.mmap(0, 4096));
+            std::cout << "BO dump:\n";
             std::cout
-                << std::hex
-                << ptr[0] << '\t'
-                << ptr[1] << '\t'
-                << ptr[2] << '\t'
-                << ptr[3] << '\t'
-                << ptr[4] << '\t'
-                << ptr[5] << '\t'
-                << ptr[6] << '\t'
-                << ptr[7] << std::endl;
+                << std::hex << std::setfill('0')
+                << std::setw(16) << ptr[0] << '\n'
+                << std::setw(16) << ptr[1] << '\n'
+                << std::setw(16) << ptr[2] << '\n'
+                << std::setw(16) << ptr[3] << '\n'
+                << std::setw(16) << ptr[4] << '\n'
+                << std::setw(16) << ptr[5] << '\n'
+                << std::setw(16) << ptr[6] << '\n'
+                << std::setw(16) << ptr[7] << std::endl;
             bo.munmap();
         }
     }

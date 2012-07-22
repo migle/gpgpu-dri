@@ -25,6 +25,9 @@ public:
     /// The destructure releases resources associated with the command stream.
     ~radeon_command_stream();
 
+    /// Access the id associated with this command stream.
+    std::uint32_t id() const { return _id; }
+
     /// Emit the command stream for execution.
     void emit() const;
 

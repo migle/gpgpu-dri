@@ -13,15 +13,22 @@ public:
     /// This constructor creates a GEM buffer object on a radeon device.
     /// \param device The DRI device on which to create the object.
     /// \param size The BO size in bytes.
-    /// \param alignment The BO alignment in bytes.
     /// \param domains The initial read/write domains of the BO.
+    /// \param alignment The BO alignment in bytes.
     /// \param flags The BO creation flags.
     radeon_buffer_object(
         radeon_device const& device,
         std::uint64_t size,
+        std::uint32_t domains,
         std::uint64_t alignment = 0,
-        std::uint32_t domains = RADEON_GEM_DOMAIN_VRAM,
         std::uint32_t flags = 0);
+    /// This constructor opens an existing GEM buffer object with a global
+    /// name on a radeon device.
+    /// \param device The DRI device on which the object exists.
+    /// \param name The global name of the BO.
+    radeon_buffer_object(
+        radeon_device const& device,
+        std::uint32_t name);
 
     /// This function maps the BO into the address space of the calling process.
     /// \param offset The offset into the BO of the region to map.
