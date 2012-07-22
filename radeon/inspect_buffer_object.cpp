@@ -40,16 +40,16 @@ int main(int argc, char* argv[])
         switch (word) {
             default:
             case 0:
-                std::cout << hex_dump<std::uint8_t>(static_cast<std::uint8_t*>(ptr), size / sizeof(std::uint8_t), 16) << std::endl;
+                std::cout << hex_dump<std::uint8_t>(static_cast<std::uint8_t*>(ptr), size / sizeof(std::uint8_t), 16, 8) << std::endl;
                 break;
             case 1:
-                std::cout << hex_dump<std::uint16_t>(static_cast<std::uint16_t*>(ptr), size / sizeof(std::uint16_t), 16) << std::endl;
+                std::cout << hex_dump<std::uint16_t>(static_cast<std::uint16_t*>(ptr), size / sizeof(std::uint16_t), 16, 8) << std::endl;
                 break;
             case 2:
-                std::cout << hex_dump<std::uint32_t>(static_cast<std::uint32_t*>(ptr), size / sizeof(std::uint32_t), 8) << std::endl;
+                std::cout << hex_dump<std::uint32_t>(static_cast<std::uint32_t*>(ptr), size / sizeof(std::uint32_t), 8, 8) << std::endl;
                 break;
             case 3:
-                std::cout << hex_dump<std::uint64_t>(static_cast<std::uint64_t*>(ptr), size / sizeof(std::uint64_t), 4) << std::endl;
+                std::cout << hex_dump<std::uint64_t>(static_cast<std::uint64_t*>(ptr), size / sizeof(std::uint64_t), 4, 8) << std::endl;
                 break;
         }
         bo.munmap();

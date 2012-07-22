@@ -6,8 +6,8 @@
 template < typename T >
 class hex_dump {
 public:
-    hex_dump(T const* ptr, std::size_t n, std::size_t c = 1)
-        : base(ptr), size(n), cols(c) {}
+    hex_dump(T const* ptr, std::size_t n, std::size_t c = 1, std::size_t a = 0)
+        : base(ptr), size(n), cols(c), addr(a) {}
 
     friend std::ostream& operator << (std::ostream& os, hex_dump const& hd)
     {
@@ -20,10 +20,12 @@ public:
         {
             if (i % hd.cols == 0) {
                 if (i != 0) os << '\n';
-                os.width(6),
-                os << i << ':';
+                if (hd.addr != 0) {
+                    os.width(hd.addr);
+                    os << i << ':' << '\t' << std::flush;
+                }
             }
-            os << '\t';
+            else os << '\t';
             os.width(std::numeric_limits<T>::digits / 4);
             os << *p;
         }
@@ -37,4 +39,5 @@ private:
     T const* base;
     std::size_t size;
     std::size_t cols;
+    std::size_t addr;
 };
