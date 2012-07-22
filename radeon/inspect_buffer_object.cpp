@@ -12,11 +12,11 @@ int main(int argc, char* argv[])
     std::uint32_t name = 0, word = 0;
     std::uint64_t offset = 0, size = 0;
 
-    if (argc != 5 || argc != 6 ||
-        std::istringstream(argv[2]) >> name ||
-        std::istringstream(argv[3]) >> offset ||
-        std::istringstream(argv[4]) >> size || size > 4096 ||
-        argc == 6 && std::istringstream(argv[5]) >> word || word > 3)
+    if (argc != 5 && argc != 6 ||
+        !(std::istringstream(argv[2]) >> name) ||
+        !(std::istringstream(argv[3]) >> offset) ||
+        !(std::istringstream(argv[4]) >> size) || size > 4096 ||
+        argc == 6 && !(std::istringstream(argv[5]) >> word) || word > 3)
     {
         std::cerr
             << "Usage " << argv[0]
