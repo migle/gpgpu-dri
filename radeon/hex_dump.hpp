@@ -18,7 +18,12 @@ public:
         T const* p = hd.base;
         for (std::size_t i = 0; i != hd.size; ++i, ++p)
         {
-            if (i != 0) os << (i % hd.cols == 0 ? '\n' : '\t');
+            if (i % hd.cols == 0) {
+                if (i != 0) os << '\n';
+                os.width(6),
+                os << i << ':';
+            }
+            os << '\t';
             os.width(std::numeric_limits<T>::digits / 4);
             os << *p;
         }

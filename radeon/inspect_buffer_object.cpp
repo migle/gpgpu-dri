@@ -32,25 +32,11 @@ int main(int argc, char* argv[])
         std::cout << "BO handle = " << bo.handle() << " size = " << bo.size() << std::endl;
 #if 1
         void* base = bo.mmap(0, bo.size());
-        std::uint8_t* ptr = static_cast<std::uint8_t*>(base) + offset;
-        switch (word) {
-            default:
-            case 0:
-                std::cout << hex_dump<std::uint8_t>(reinterpret_cast<std::uint8_t*>(ptr), size / sizeof(std::uint8_t), 16) << std::endl;
-                break;
-            case 1:
-                std::cout << hex_dump<std::uint16_t>(reinterpret_cast<std::uint16_t*>(ptr), size / sizeof(std::uint16_t), 16) << std::endl;
-                break;
-            case 2:
-                std::cout << hex_dump<std::uint32_t>(reinterpret_cast<std::uint32_t*>(ptr), size / sizeof(std::uint32_t), 8) << std::endl;
-                break;
-            case 3:
-                std::cout << hex_dump<std::uint64_t>(reinterpret_cast<std::uint64_t*>(ptr), size / sizeof(std::uint64_t), 4) << std::endl;
-                break;
-        }
-        bo.munmap();
+        void* ptr = static_cast<std::uint8_t*>(base) + offset;
 #else
         void* ptr = bo.mmap(offset, size);
+#endif
+        std::cout << "BO mmap base = " << ptr << std::endl;
         switch (word) {
             default:
             case 0:
@@ -67,7 +53,6 @@ int main(int argc, char* argv[])
                 break;
         }
         bo.munmap();
-#endif
         return 0;
     }
     catch (std::system_error& e) {
