@@ -3,10 +3,10 @@ LDFLAGS=$(shell pkg-config --libs libdrm libdrm_radeon)
 
 #HEADERS=$(wildcard r*.hpp)
 #SOURCES=$(wildcard r*.cpp)
-HEADERS=dri_device.hpp gem_buffer_object.hpp gem_command_stream.hpp radeon_device.hpp radeon_buffer_object.hpp radeon_command_stream.hpp
+HEADERS=dri_device.hpp gem_buffer_object.hpp gem_command_stream.hpp radeon_device.hpp radeon_buffer_object.hpp radeon_command_stream.hpp hex_dump.hpp
 SOURCES=dri_device.cpp gem_buffer_object.cpp gem_command_stream.cpp radeon_device.cpp radeon_buffer_object.cpp radeon_command_stream.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-TARGETS=test_buffer_object test_command_stream
+TARGETS=inspect_buffer_object test_buffer_object test_command_stream
 
 all : $(TARGETS)
 
@@ -20,6 +20,11 @@ doc :
 
 %.o : %.cpp $(HEADERS)
 
-test_buffer_object : test_buffer_object.cpp $(OBJECTS)
+inspect_buffer_object : inspect_buffer_object.o $(OBJECTS)
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
-test_command_stream : test_command_stream.cpp $(OBJECTS)
+test_buffer_object : test_buffer_object.o $(OBJECTS)
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+test_command_stream : test_command_stream.o $(OBJECTS)
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@

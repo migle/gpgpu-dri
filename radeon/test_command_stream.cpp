@@ -6,6 +6,7 @@
 #include "radeon_device.hpp"
 #include "radeon_buffer_object.hpp"
 #include "radeon_command_stream.hpp"
+#include "hex_dump.hpp"
 
 #include "r600d.h"
 
@@ -107,17 +108,9 @@ int main(int argc, char* argv[])
         // Map the BO and read back the result.
         {
             std::uint64_t* ptr = static_cast<std::uint64_t*>(bo.mmap(0, 4096));
-            std::cout << "BO dump:\n";
-            std::cout
-                << std::hex << std::setfill('0')
-                << std::setw(16) << ptr[0] << '\n'
-                << std::setw(16) << ptr[1] << '\n'
-                << std::setw(16) << ptr[2] << '\n'
-                << std::setw(16) << ptr[3] << '\n'
-                << std::setw(16) << ptr[4] << '\n'
-                << std::setw(16) << ptr[5] << '\n'
-                << std::setw(16) << ptr[6] << '\n'
-                << std::setw(16) << ptr[7] << std::endl;
+            std::cout << "BO dump:\n"
+                << hex_dump<uint64_t>(ptr, 32, 4)
+                << std::endl;
             bo.munmap();
         }
     }
