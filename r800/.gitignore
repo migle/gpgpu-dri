@@ -1,0 +1,5 @@
+*.a
+*.o
+*.bin
+as_r800
+loader
