@@ -102,7 +102,7 @@ void loader(r800_state& state, const char* shader, int x, int y, int z, int lx, 
 
     std::cerr
         << "Execution time GPU: " << timediff << " ns\n"
-        << ldexp(bufsize, -30) / (timediff * 1e-9) << " Gbyte/s\n"
+        << ldexp(bufsize, -30) / (timediff * 1e-9) << " GByte/s\n"
         << ldexp(bufsize, 3 - 30) / (timediff * 1e-9) << " Gbit/s"
         << std::endl;
   
