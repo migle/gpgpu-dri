@@ -8,7 +8,7 @@
 #include <drm.h>
 #include <radeon_drm.h>
 
-#include "r600d.h"
+#include "radeon/r600d.h"
 
 #if !defined(RADEON_CHUNK_ID_FLAGS)
 #define RADEON_CHUNK_ID_FLAGS       0x03

@@ -8,7 +8,7 @@
 #include "radeon_command_stream.hpp"
 #include "hex_dump.hpp"
 
-#include "r600d.h"
+#include "radeon/r600d.h"
 
 int main(int argc, char* argv[])
 {
