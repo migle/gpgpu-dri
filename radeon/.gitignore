@@ -1,6 +1,3 @@
-html/
-latex/
-*.o
 inspect_buffer_object
 test_buffer_object
 test_command_stream
