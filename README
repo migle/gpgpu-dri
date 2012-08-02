@@ -1,0 +1,28 @@
+
+                                     README
+
+This project is about doing general-purpose computing on GPUs at machine code
+level. I am using those graphics processors from AMD for which documentation is
+available, specifically these are the R6xx, R7xx, Evergreen and AMD HD 6900
+series right now. For setting up the processing pipeline of these chips I am
+using nothing but the Linux DRI and the documentation of these chips.
+
+I do not believe that programming GPUs at machine code level is an interesting
+option. This project is about gaining a deeper understanding of these chips and
+exploring the possibilities of the instruction set may be a key element.
+
+We have seen emerge in the past few years many programming models and languages
+for GPGPU computing. Some of these, like CUDA and OpenCL, rely on components
+and compilers supplied by hardware vendors. Others rely on translators from
+higher-level languages to CUDA or OpenCL.
+
+I feel that, for those of us who are interested in a higher-level programming
+model, the translation approach has serious drawbacks. The CUDA and OpenCL
+programming models have limitations which may not be inherent to the chip.
+On the other hand, the way that the CUDA or OpenCL programming model is mapped
+to the instruction set may not be the most efficient for a very different
+programming model, such as that of a declarative programming language.
+
+
+                                        Miguel Lopes Santos Ramos
+
