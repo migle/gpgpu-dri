@@ -8,7 +8,7 @@ SOURCES=dri_device.cpp gem_buffer_object.cpp gem_command_stream.cpp radeon_devic
 OBJECTS=$(SOURCES:.cpp=.o)
 
 LIBS=libdri.a
-PROGS=inspect_buffer_object test_buffer_object test_command_stream
+PROGS=inspect_buffer_object test_device test_buffer_object test_command_stream
 
 all : $(LIBS) $(PROGS)
 
@@ -33,6 +33,9 @@ libdri.a : libdri.a($(OBJECTS))
 	ranlib $@
 
 inspect_buffer_object : inspect_buffer_object.o libdri.a
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+test_device : test_device.o libdri.a
 	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 test_buffer_object : test_buffer_object.o libdri.a
