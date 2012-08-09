@@ -4,6 +4,7 @@
 
 /// This class wraps a handle to a GEM command stream.
 class gem_command_stream {
+#if 0
 public:
     /// This function returns the DRI device on which this object exists.
     dri_device const& device() const { return _device; }
@@ -18,4 +19,5 @@ protected:
 private:
     /// A const reference to the DRI device wrapper.
     dri_device const& _device;
+#endif
 };

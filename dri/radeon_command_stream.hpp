@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gem_buffer_object.hpp"
 #include "gem_command_stream.hpp"
 #include "radeon_device.hpp"
 #include "hex_dump.hpp"
@@ -27,21 +26,31 @@ public:
     /// The destructure releases resources associated with the command stream.
     ~radeon_command_stream();
 
+    /// This function returns the DRI device on which this object exists.
+    radeon_device const& device() const { return _device; }
+
     /// Access the id associated with this command stream.
     std::uint32_t id() const { return _id; }
 
     /// Emit the command stream for execution.
     void emit() const;
 
+    /// Get the current capacity of the instruction buffer.
+    /// \returns The capacity in number of double words of the IB.
+    std::size_t capacity() const { return _ib.capacity(); }
+    /// Get the current size of the instruction buffer.
+    /// \returns The number of double words in the IB.
+    std::size_t size() const { return _ib.size(); }
     /// Reserve storage in the instruction buffer.
     /// Calling this function is unnecessary, it is an optimization.
     /// \param n The least number of double words for which to reserve storage.
     void reserve(std::size_t n) { _ib.reserve((n + 01777u) & ~01777u); }
+
     /// Append a double word to the end of the instruction buffer.
     /// \param x The double word to append.
     void write(std::uint32_t x)
     {
-        if (_ib.empty()) reserve(1);
+        reserve(size() + 1);
         _ib.push_back(x);
     }
     /// Append a float number to the end of the instruction buffer.
@@ -52,7 +61,7 @@ public:
     /// \param x The list of double words to append.
     void write(std::initializer_list<std::uint32_t> x)
     {
-        if (_ib.empty()) reserve(x.size());
+        reserve(size() + x.size());
         _ib.insert(_ib.end(), x.begin(), x.end());
     }
 
@@ -67,43 +76,6 @@ public:
         std::uint32_t write_domain = 0,
         std::uint32_t flags = 0);
 
-    /// Append the header of a PM4 packet for setting a number of registers
-    /// starting at the given register offset.
-    /// \param offset Register offset of the first register in the series.
-    /// \param n Number of registers to set.
-    void write_set_reg(std::uint32_t offset, std::uint32_t n);
-
-    /// The structure of the proxy object which is used for conveniently
-    /// setting a series of registers.
-    ///
-    /// This was inspired on Adam Rak's HD-Radeon-Compute project. I considered
-    /// other options, such as iostream syntax, but initializer lists cannot be
-    /// used in a general expression as they can be on the right side of an
-    /// assignment, as function arguments, etc.
-    /// Given this, this syntax seems to be the most convenient.
-    struct register_setter {
-        radeon_command_stream& cs;  ///< Command stream for which to proxy.
-        std::uint32_t offset;   ///< Offset of the first register in the series.
-        /// Set the register at offset to the given double word.
-        void operator = (std::uint32_t x) { cs.write_set_reg(offset, 1); cs.write(x); }
-        /// Set the register at offset to the given float number.
-        void operator = (float x) { cs.write_set_reg(offset, 1); cs.write(x); }
-        /// Set registers starting at offset to the given values.
-        /// \param x Double words in an initializer list.
-        void operator = (std::initializer_list<std::uint32_t> x)
-            { cs.write_set_reg(offset, x.size()); cs.write(x); }
-    };
-    /// Append a PM4 packet to the instruction buffer that sets a series of
-    /// consecutive hardware registers starting at the given register offset.
-    ///
-    /// This member function merely returns the \c register_setter proxy
-    /// object that will actually append the packet to the IB.
-    ///
-    /// \param offset Register offset of the first register in the series.
-    /// \returns Proxy \c register_setter object.
-    register_setter operator [] (std::uint32_t offset)
-        { return { *this, offset }; }
-
     /// Dump the CS to an output stream.
     /// \param os Output stream.
     /// \param cs The CS object.
@@ -114,7 +86,7 @@ public:
         return os;
     }
 
-protected:
+private:
     /// The size in double words of the relocation structure.
     static const std::uint32_t reloc_size =
         sizeof(drm_radeon_cs_reloc) / sizeof(std::uint32_t);
@@ -125,7 +97,9 @@ protected:
     /// This function releases the id of a command stream.
     static void release_id(std::uint32_t);
 
-protected:
+private:
+    /// A const reference to the DRI device wrapper.
+    radeon_device const& _device;
     /// The instruction buffer chunk.
     std::vector<std::uint32_t> _ib;
     /// The relocations chunk.

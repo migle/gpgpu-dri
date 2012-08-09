@@ -3,8 +3,10 @@ CXXFLAGS=-std=c++0x -pthread -O2 $(shell pkg-config --cflags libdrm libdrm_radeo
 
 #HEADERS=$(wildcard r*.hpp)
 #SOURCES=$(wildcard r*.cpp)
-HEADERS=dri_device.hpp gem_buffer_object.hpp gem_command_stream.hpp radeon_device.hpp radeon_buffer_object.hpp radeon_command_stream.hpp hex_dump.hpp
-SOURCES=dri_device.cpp gem_buffer_object.cpp gem_command_stream.cpp radeon_device.cpp radeon_buffer_object.cpp radeon_command_stream.cpp
+HEADERS=dri_device.hpp gem_buffer_object.hpp gem_command_stream.hpp radeon_device.hpp radeon_buffer_object.hpp hex_dump.hpp \
+	radeon_command_stream.hpp r600_command_stream.hpp evergreen_command_stream.hpp
+SOURCES=dri_device.cpp gem_buffer_object.cpp gem_command_stream.cpp radeon_device.cpp radeon_buffer_object.cpp \
+	radeon_command_stream.cpp r600_command_stream.cpp evergreen_command_stream.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 
 LIBS=libdri.a

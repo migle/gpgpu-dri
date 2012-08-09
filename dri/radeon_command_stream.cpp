@@ -5,10 +5,6 @@
 
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <drm.h>
-#include <radeon_drm.h>
-
-#include "radeon/r600d.h"
 
 #if !defined(RADEON_CHUNK_ID_FLAGS)
 #define RADEON_CHUNK_ID_FLAGS       0x03
@@ -37,8 +33,8 @@ void radeon_command_stream::release_id(uint32_t id)
     _used_id &= ~id;
 }
 
-radeon_command_stream::radeon_command_stream(radeon_device const& dev)
-    : gem_command_stream(dev), _id(new_id())
+radeon_command_stream::radeon_command_stream(radeon_device const& device)
+    : _device(device), _id(new_id())
 {
     _flags[0] = _flags[1] = 0;
 }
@@ -119,59 +115,5 @@ void radeon_command_stream::write_reloc(
         _relocs[p->second].flags |= flags;
     }
 
-    write({ PACKET3(PACKET3_NOP, 0), p->second * reloc_size });
-}
-
-void radeon_command_stream::write_set_reg(std::uint32_t offset, std::uint32_t n)
-{
-    if (_ib.empty()) reserve(n + 2);
-
-    /// This function will select the appropriate PM4 packet, either a type-3
-    /// or a type-0 packet for setting the register, as different sets of
-    /// registers require a slightly different command.
-
-    if (offset >= PACKET3_SET_CONFIG_REG_OFFSET && offset < PACKET3_SET_CONFIG_REG_END)
-        write({
-            PACKET3(PACKET3_SET_CONFIG_REG, n),
-            (offset - PACKET3_SET_CONFIG_REG_OFFSET) >> 2
-        });
-    else if (offset >= PACKET3_SET_CONTEXT_REG_OFFSET && offset < PACKET3_SET_CONTEXT_REG_END)
-        write({
-            PACKET3(PACKET3_SET_CONTEXT_REG, n),
-            (offset - PACKET3_SET_CONTEXT_REG_OFFSET) >> 2
-        });
-    else if (offset >= PACKET3_SET_RESOURCE_OFFSET && offset < PACKET3_SET_RESOURCE_END)
-        write({
-            PACKET3(PACKET3_SET_RESOURCE, n),
-            (offset - PACKET3_SET_RESOURCE_OFFSET) >> 2
-        });
-    else if (offset >= PACKET3_SET_SAMPLER_OFFSET && offset < PACKET3_SET_SAMPLER_END)
-        write({
-            PACKET3(PACKET3_SET_SAMPLER, n),
-            (offset - PACKET3_SET_SAMPLER_OFFSET) >> 2
-        });
-    else if (offset >= PACKET3_SET_CTL_CONST_OFFSET && offset < PACKET3_SET_CTL_CONST_END)
-        write({
-            PACKET3(PACKET3_SET_CTL_CONST, n),
-            (offset - PACKET3_SET_CTL_CONST_OFFSET) >> 2
-        });
-    else if (offset >= PACKET3_SET_ALU_CONST_OFFSET && offset < PACKET3_SET_ALU_CONST_END)
-        write({
-            PACKET3(PACKET3_SET_ALU_CONST, n),
-            (offset - PACKET3_SET_ALU_CONST_OFFSET) >> 2
-        });
-    else if (offset >= PACKET3_SET_BOOL_CONST_OFFSET && offset < PACKET3_SET_BOOL_CONST_END)
-        write({
-            PACKET3(PACKET3_SET_BOOL_CONST, n),
-            (offset - PACKET3_SET_BOOL_CONST_OFFSET) >> 2
-        });
-    else if (offset >= PACKET3_SET_LOOP_CONST_OFFSET && offset < PACKET3_SET_LOOP_CONST_END)
-        write({
-            PACKET3(PACKET3_SET_LOOP_CONST, n),
-            (offset - PACKET3_SET_LOOP_CONST_OFFSET) >> 2
-        });
-    else
-        write({
-            PACKET0(offset, (n - 1))
-        });
+    write({ 0xc0001000, p->second * reloc_size });
 }
