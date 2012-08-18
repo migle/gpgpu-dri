@@ -19,15 +19,25 @@
 #include "hex_dump.hpp"
 
 template < typename T >
-void loader(r800_state& state, const char* shader, int x, int y, int z, int lx, int ly, int lz, int num_format_all)
+void loader(r800_state& state, const char* shader, const int Gx, const int Gy, const int Gz, const int Dx, const int Dy, const int Dz, const int width, const int guard, const int num_format_all)
 {
     compute_shader sh(&state, shader);
+    std::cerr <<
+        "GPRs = " << sh.num_gprs << " stack = " << sh.stack_size << " alloc = " << sh.alloc_size << " "
+        "temp GPRs = " << sh.temp_gprs << " global GPRs = " << sh.global_gprs << std::endl;
+
     state.set_kms_compute_mode(true);
 
-    assert(x >= 1 && y >= 1 && z >= 1 && sizeof(T) == 4);
-    int size = x * y * z;
-    int bufsize = size * sizeof(T);
-    uint32_t domain = RADEON_GEM_DOMAIN_VRAM;
+    const int size = Gx * Gy * Gz * Dx * Dy * Dz * width;
+    const int safesize = size + guard;
+    const int bufsize = safesize * sizeof(T);
+    const uint32_t domain = RADEON_GEM_DOMAIN_VRAM;
+    std::cerr <<
+        "items per group = " << Gx << "x" << Gy << "x" << Gz << "\n"
+        "groups total = " << Dx << "x" << Dy << "x" << Dz << "\n"
+        "item width = " << width << "\n"
+        "size = " << size << " safesize = " << safesize << " bufsize = " << bufsize << std::endl;
+    assert(Gx >= 1 && Gy >= 1 && Gz >= 1 && Dx >= 1 && Dy >= 1 && Dz >= 1 && (width == 1 || width == 2 || width == 4) && guard >= 0 && sizeof(T) == 4);
 
     std::cerr << "initializing output buffer " << bufsize << " bytes ... " << std::flush;
     radeon_bo* write_buffer = state.bo_open(0, bufsize, 4096, domain, 0);
@@ -35,8 +45,11 @@ void loader(r800_state& state, const char* shader, int x, int y, int z, int lx, 
     {
         T* ptr = static_cast<T*>(write_buffer->ptr);
         T* end = ptr + size;
+        T* limit = ptr + safesize;
         while (ptr != end)
-            *ptr++ = 0xFF; // garbage on the output buffer
+            *ptr++ = 0xff; // garbage on the output buffer
+        while (ptr != limit)
+            *ptr++ = 0xea; // garbage on the output buffer
     }
     radeon_bo_unmap(write_buffer);
     std::cerr << "done." << std::endl;
@@ -46,10 +59,14 @@ void loader(r800_state& state, const char* shader, int x, int y, int z, int lx, 
     radeon_bo_map(read_buffer, 1);
     {
         T* ptr = static_cast<T*>(read_buffer->ptr);
-        for (int k = 0; k != z; ++k)
-            for (int j = 0; j != y; ++j)
-                for (int i = 0; i != x; ++i)
-                    *ptr++ = T(k * 65536 + j * 256 + i); // the input pattern
+        T* limit = ptr + safesize;
+        for (int k = 0; k != Gz * Dz; ++k)
+            for (int j = 0; j != Gy * Dy; ++j)
+                for (int i = 0; i != Gx * Dx; ++i)
+                    for (int w = 0; w != width; ++w)
+                        *ptr++ = T((w + 1) * 0x1000000 + k * 0x10000 + j * 0x100 + i); // the input pattern
+        while (ptr != limit)
+            *ptr++ = 0xae; // guard pattern
     }
     radeon_bo_unmap(read_buffer);
     std::cerr << "done." << std::endl;
@@ -81,11 +98,11 @@ void loader(r800_state& state, const char* shader, int x, int y, int z, int lx, 
     state.set_lds(0, 0, 0);
     state.load_shader(&sh);
     state.direct_dispatch(
-        std::initializer_list<int>({ x, y, z }),
-        std::initializer_list<int>({ lx, ly, lz }));
+        std::initializer_list<int>({ Dx, Dy, Dz }),
+        std::initializer_list<int>({ Gx, Gy, Gz }));
     std::cerr << "done." << std::endl;
 
-    std::cerr << "start kernel of " << x << "x" << y << "x" << z << " ... " << std::flush;
+    std::cerr << "start kernel ... " << std::flush;
     timespec time1;
     clock_gettime(CLOCK_MONOTONIC_RAW, &time1);
 
@@ -109,7 +126,7 @@ void loader(r800_state& state, const char* shader, int x, int y, int z, int lx, 
     radeon_bo_map(write_buffer, 0);
     {
         std::cout << "Result:\n"
-            << hex_dump<uint32_t>(static_cast<uint32_t*>(write_buffer->ptr), size, 4, 6)
+            << hex_dump<uint32_t>(static_cast<uint32_t*>(write_buffer->ptr), safesize, width == 1 ? 4 : width, 6)
             << std::endl;
     }
     radeon_bo_unmap(write_buffer);  
@@ -131,8 +148,9 @@ int main(int argc, char* argv[])
 {
     const char *card = "/dev/dri/card0";
     const char *shader = 0;
-    int x = 1, y = 1, z = 1;
-    int X = 1, Y = 1, Z = 1;
+    int Gx = 1, Gy = 1, Gz = 1;
+    int Dx = 1, Dy = 1, Dz = 1;
+    int width = 1, guard = 16;
     bool reset = false;
 
     for (int i = 1; i < argc; i++) {
@@ -149,42 +167,52 @@ int main(int argc, char* argv[])
                 break;
             }
             if (argv[i][1] == 'x') {
-                x = std::strtol(argv[i] + 2, 0, 10);
+                Gx = std::strtol(argv[i] + 2, 0, 10);
                 break;
             }
             if (argv[i][1] == 'y') {
-                y = std::strtol(argv[i] + 2, 0, 10);
+                Gy = std::strtol(argv[i] + 2, 0, 10);
                 break;
             }
             if (argv[i][1] == 'z') {
-                z = std::strtol(argv[i] + 2, 0, 10);
+                Gz = std::strtol(argv[i] + 2, 0, 10);
                 break;
             }
             if (argv[i][1] == 'X') {
-                X = std::strtol(argv[i] + 2, 0, 10);
+                Dx = std::strtol(argv[i] + 2, 0, 10);
                 break;
             }
             if (argv[i][1] == 'Y') {
-                Y = std::strtol(argv[i] + 2, 0, 10);
+                Dy = std::strtol(argv[i] + 2, 0, 10);
                 break;
             }
             if (argv[i][1] == 'Z') {
-                Z = std::strtol(argv[i] + 2, 0, 10);
+                Dz = std::strtol(argv[i] + 2, 0, 10);
+                break;
+            }
+            if (argv[i][1] == 'w') {
+                width = std::strtol(argv[i] + 2, 0, 10);
+                break;
+            }
+            if (argv[i][1] == 'G') {
+                guard = std::strtol(argv[i] + 2, 0, 10);
                 break;
             }
             if (std::strcmp(argv[i], "-h") && std::strcmp(argv[i], "--help"))
                 std::cerr << "Unrecognized option: " << argv[i] << "\n\n";
             std::cerr <<
-                "Usage: " << argv[0] << " [-r] [-c<card>] [-x<n>] [-y<n>] [-z<n>] [-X<n>] [-Y<n>] [-Z<n>] <shader-name>\n"
+                "Usage: " << argv[0] << " [-r] [-c<card>] [-x<n>] [-y<n>] [-z<n>] [-X<n>] [-Y<n>] [-Z<n>] [-w<n>] [-G<n>] <shader-name>\n"
                 "\n"
                 "\t-r --reset\treset GPU before starting\n"
                 "\t-c/dev/dri/card<n> use alternate card\n"
-                "\t-x<n>\tset block size in X\n"
-                "\t-y<n>\tset block size in Y\n"
-                "\t-z<n>\tset block size in Z\n"
-                "\t-X<n>\tset local size in X\n"
-                "\t-Y<n>\tset local size in Y\n"
-                "\t-Z<n>\tset local size in Z\n" << std::endl;
+                "\t-x<n>\tnumber of items per group in X\n"
+                "\t-y<n>\tnumber of items per group in Y\n"
+                "\t-z<n>\tnumber of items per group in Z\n"
+                "\t-X<n>\tnumber of groups in X\n"
+                "\t-Y<n>\tnumber of groups in Y\n"
+                "\t-Z<n>\tnumber of groups in Z\n"
+                "\t-w<n>\tvector width\n"
+                "\t-G<n>\tnumber of items of guard\n" << std::endl;
             return 1;
         default:
             shader = argv[i];
@@ -194,13 +222,13 @@ int main(int argc, char* argv[])
 
     if (shader)
     {
-        std::cerr << "Shader \"" << shader << "\" at " << x << "x" << y << "x" << z << std::endl;
+        std::cerr << "Shader \"" << shader << "\":" << std::endl;
 
         int drm_fd = open_drm(card);
         r800_state state(drm_fd, reset);
         state.set_default_state();
 
-        loader<int32_t>(state, shader, x, y, z, X, Y, Z, SQ_NUM_FORMAT_INT);
+        loader<int32_t>(state, shader, Gx, Gy, Gz, Dx, Dy, Dz, width, guard, SQ_NUM_FORMAT_INT);
     }
     return 0;
 }
