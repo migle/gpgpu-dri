@@ -5,8 +5,6 @@
 
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <drm.h>
-#include <radeon_drm.h>
 
 using namespace std;
 

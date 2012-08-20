@@ -3,10 +3,6 @@
 #include "gem_buffer_object.hpp"
 #include "radeon_device.hpp"
 
-#include <xf86drm.h>
-#include <drm.h>
-#include <radeon_drm.h>
-
 /// This class wraps a handle to a GEM buffer object of the radeon driver.
 class radeon_buffer_object : public gem_buffer_object {
 public:

@@ -11,10 +11,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <xf86drm.h>
-#include <drm.h>
-#include <radeon_drm.h>
-
 /// This class wraps an in-memory GEM command stream.
 class radeon_command_stream : public gem_command_stream {
 public:

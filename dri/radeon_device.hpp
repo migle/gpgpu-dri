@@ -2,7 +2,8 @@
 
 #include "dri_device.hpp"
 
-#include <xf86drm.h>
+#include <sys/types.h>
+#include <stdint.h>
 #include <drm.h>
 #include <radeon_drm.h>
 
