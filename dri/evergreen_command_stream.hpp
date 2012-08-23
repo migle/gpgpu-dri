@@ -54,4 +54,11 @@ public:
 
     /// Initialize a command stream.
     void start_3d();
+
+    /// Compute shader dispatch.
+    void dispatch_direct(std::vector<unsigned int> group_dims,
+        std::vector<unsigned int> grid_dims);
+
+    void set_gds(std::uint32_t addr, std::uint32_t size);
+    void set_export(std::uint32_t handle, std::uint32_t offset, std::uint32_t size);
 };
