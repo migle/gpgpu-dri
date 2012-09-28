@@ -3,6 +3,8 @@ ASM_TARGETS = $(addsuffix .bin, $(basename $(wildcard *.asm)))
 CPP_SOURCES = $(wildcard *.cpp)
 CPP_TARGETS = $(basename $(wildcard *.cpp))
 
+INCLUDES = $(wildcard *.hpp)
+
 all : all-asm all-cpp
 
 all-asm : $(ASM_TARGETS)
@@ -14,7 +16,7 @@ clean :
 	rm -fv $(CPP_TARGETS)
 
 %.bin : %.asm
-	./as_r800 $^
+	./as_r800 $<
 
-%: %.cpp
-	g++ -std=c++0x -O -I /usr/include/libdrm -I ../watch/rakadam/HD-Radeon-Compute -o $@ $^ libr800_compute.a -ldrm -ldrm_radeon
+%: %.cpp $(INCLUDES)
+	g++ -std=c++0x -O -I /usr/include/libdrm -I ../watch/rakadam/HD-Radeon-Compute -o $@ $< libr800_compute.a -ldrm -ldrm_radeon
