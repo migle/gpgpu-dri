@@ -21,7 +21,7 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
     sh.lds_alloc = 0;
     sh.num_gprs = 4;
     sh.temp_gprs = 0;
-    sh.global_gprs = 1;
+    sh.global_gprs = 0;
     sh.stack_size = 16;
     //sh.thread_num = 4;
 
