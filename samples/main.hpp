@@ -65,8 +65,8 @@ int main(int argc, char* argv[])
                 break;
             default:
                 cerr << "Usage: " << argv[0] << " [-r] [-c<card>] [-x<n>] [-y<n>] [-z<n>] [-X<n>] [-Y<n>] [-Z<n>] [-G<n>] [-w<n>] [-a<n>]\n\n"
-                    "\t-r\treset GPU before starting\n"
                     "\t-c/dev/dri/card<n> use alternate card\n"
+                    "\t-r\treset GPU before starting\n"
                     "\t-x <n>\tnumber of items per group in X (1)\n"
                     "\t-y <n>\tnumber of items per group in Y (1)\n"
                     "\t-z <n>\tnumber of items per group in Z (1)\n"
