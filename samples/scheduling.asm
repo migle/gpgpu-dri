@@ -1,37 +1,44 @@
 // Miguel Ramos, 2012.
 // vim: set et sw=4 sts=4 ts=8:
 
-// We have the [xyz] strides in the constant cache.
+// This CS expects the following resources to be set up:
+//  constant buffer 0:
+//      items per group x, y, z, 0
+//      number of groups X, Y, Z, 0
+//      item array stride x, y, z, 0
+//      group array stride x, y, z, 0
+//  RAT resource 0 (output buffer) with 4 dwords per 64 items in the domain.
+
 // We want to compute a linearized local_ID.
 ALU: KCACHE_BANK0(0) KCACHE_MODE0.CF_KCACHE_LOCK_1 BARRIER;
 
     // R2.xyzw <- local_ID.xyzw * local_stride.xyzw
     MUL_UINT24: DST_GPR(2) DST_CHAN.CHAN_X
         SRC0_SEL.GPR(0) SRC0_CHAN.CHAN_X
-        SRC1_SEL.Kcache_bank0(4) SRC1_CHAN.CHAN_X WRITE_MASK;
+        SRC1_SEL.Kcache_bank0(2) SRC1_CHAN.CHAN_X WRITE_MASK;
     MUL_UINT24: DST_GPR(2) DST_CHAN.CHAN_Y
         SRC0_SEL.GPR(0) SRC0_CHAN.CHAN_Y
-        SRC1_SEL.Kcache_bank0(4) SRC1_CHAN.CHAN_Y WRITE_MASK;
+        SRC1_SEL.Kcache_bank0(2) SRC1_CHAN.CHAN_Y WRITE_MASK;
     MUL_UINT24: DST_GPR(2) DST_CHAN.CHAN_Z
         SRC0_SEL.GPR(0) SRC0_CHAN.CHAN_Z
-        SRC1_SEL.Kcache_bank0(4) SRC1_CHAN.CHAN_Z WRITE_MASK;
+        SRC1_SEL.Kcache_bank0(2) SRC1_CHAN.CHAN_Z WRITE_MASK;
     MUL_UINT24: DST_GPR(2) DST_CHAN.CHAN_W
         SRC0_SEL.GPR(0) SRC0_CHAN.CHAN_W
-        SRC1_SEL.Kcache_bank0(4) SRC1_CHAN.CHAN_W WRITE_MASK LAST;
+        SRC1_SEL.Kcache_bank0(2) SRC1_CHAN.CHAN_W WRITE_MASK LAST;
 
     // PV.xyzw <- group_ID.xyzw * group_stride.xyzw
     MUL_UINT24: DST_GPR(3) DST_CHAN.CHAN_X
         SRC0_SEL.GPR(1) SRC0_CHAN.CHAN_X
-        SRC1_SEL.Kcache_bank0(5) SRC1_CHAN.CHAN_X;
+        SRC1_SEL.Kcache_bank0(3) SRC1_CHAN.CHAN_X;
     MUL_UINT24: DST_GPR(3) DST_CHAN.CHAN_Y
         SRC0_SEL.GPR(1) SRC0_CHAN.CHAN_Y
-        SRC1_SEL.Kcache_bank0(5) SRC1_CHAN.CHAN_Y;
+        SRC1_SEL.Kcache_bank0(3) SRC1_CHAN.CHAN_Y;
     MUL_UINT24: DST_GPR(3) DST_CHAN.CHAN_Z
         SRC0_SEL.GPR(1) SRC0_CHAN.CHAN_Z
-        SRC1_SEL.Kcache_bank0(5) SRC1_CHAN.CHAN_Z;
+        SRC1_SEL.Kcache_bank0(3) SRC1_CHAN.CHAN_Z;
     MUL_UINT24: DST_GPR(3) DST_CHAN.CHAN_W
         SRC0_SEL.GPR(1) SRC0_CHAN.CHAN_W
-        SRC1_SEL.Kcache_bank0(5) SRC1_CHAN.CHAN_W LAST;
+        SRC1_SEL.Kcache_bank0(3) SRC1_CHAN.CHAN_W LAST;
 
     // PV.xyzw <- R2.xyzw + PV.xyzw
     ADD_INT: DST_CHAN.CHAN_X
@@ -111,7 +118,7 @@ ALU: KCACHE_BANK0(0) KCACHE_MODE0.CF_KCACHE_LOCK_1 BARRIER;
     MOV: DST_GPR(3) DST_CHAN.CHAN_W
         SRC0_SEL.ALU_SRC_TIME_LO WRITE_MASK LAST;
 
-    // if (R2.x % 64 == 0), R2.x <- R2.x << 6
+    // if (R2.x % 64 == 0), R2.x <- R2.x / 64
     LSHR_INT: DST_GPR(2) DST_CHAN.CHAN_X
         SRC0_SEL.GPR(2) SRC0_CHAN.CHAN_X
         SRC1_SEL.ALU_SRC_LITERAL SRC1_CHAN.CHAN_X WRITE_MASK;

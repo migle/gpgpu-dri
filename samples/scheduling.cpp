@@ -67,7 +67,6 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
 
     cerr << "Mapping output buffer as RAT resource (id=0) ... " << flush;
     state.set_rat(0, outbo, 0, outbytes);
-    //state.set_export(outbo, 0, outbytes);
     cerr << "done." << endl;
   
     cerr << "Initializing the constant cache (id=0) ... " << flush;
@@ -77,12 +76,12 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         uint32_t* ptr = static_cast<uint32_t*>(constbo->ptr);
         *ptr++ = x, *ptr++ = y, *ptr++ = z, *ptr++ = 0;
         *ptr++ = X, *ptr++ = Y, *ptr++ = Z, *ptr++ = 0;
-        // domain mapping:
-        *ptr++ = 1, *ptr++ = Dx, *ptr++ = Dx*Dy, *ptr++ = 0;
-        *ptr++ = x, *ptr++ = Dx*y, *ptr++ = Dx*Dy*z, *ptr++ = 0;
         // more coalescent mapping:
         *ptr++ = 1, *ptr++ = x, *ptr++ = x*y, *ptr++ = 0;
         *ptr++ = g, *ptr++ = X*g, *ptr++ = X*Y*g, *ptr++ = 0;
+        // another mapping:
+        *ptr++ = 1, *ptr++ = Dx, *ptr++ = Dx*Dy, *ptr++ = 0;
+        *ptr++ = x, *ptr++ = Dx*y, *ptr++ = Dx*Dy*z, *ptr++ = 0;
         radeon_bo_unmap(constbo);
         state.setup_const_cache(0, constbo, 32, 0);
         cerr << "done." << endl;
