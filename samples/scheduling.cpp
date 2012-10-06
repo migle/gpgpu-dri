@@ -22,7 +22,7 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
     sh.num_gprs = 4;
     sh.temp_gprs = 0;
     sh.global_gprs = 0;
-    sh.stack_size = 16;
+    sh.stack_size = 0;
     //sh.thread_num = 4;
 
     state.set_kms_compute_mode(true);
@@ -31,19 +31,23 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         g = x * y * z,
         G = X * Y * Z,
         Dx = x * X, Dy = y * Y, Dz = z * Z,
-        size = Dx * Dy * Dz;
+        size = Dx * Dy * Dz,
+        wavefront = 64, num_pipes = 2, wave_divisor = 16 * num_pipes,
+        num_waves = (g + wave_divisor - 1) / wave_divisor;
+
     cerr << "Shader \"" << shader << "\"\n"
         "GPRs = " << sh.num_gprs << " temp GPRs = " << sh.temp_gprs << " global GPRs = " << sh.global_gprs << "\n"
-        "stack = " << sh.stack_size << " alloc = " << sh.alloc_size << "\n\n"
+        "stack = " << sh.stack_size << " alloc = " << sh.alloc_size << "\n"
+        "wavefronts per group = " << num_waves << " using " << num_pipes << " pipes\n\n"
         "items per group = " << x << "x" << y << "x" << z << " = " << g << "\n"
         "number of groups = " << X << "x" << Y << "x" << Z << " = " << G << "\n"
         "domain size = " << Dx << "x" << Dy << "x" << Dz << " = " << size << "\n" << endl;
 
     const int
-        outsize = size * 4,
+        outsize = size * 4 / wavefront,
         outsafe = outsize + guard,
         outbytes = outsafe * sizeof(uint32_t);
-    cerr << "This shader has one output buffer of 4 32-bit ints per work item.\n"
+    cerr << "This shader has one primary output buffer of 4 32-bit ints per wavefront.\n"
         "Output size = " << outsize << " ints, " << outsafe << " w/guard, " << outbytes << " bytes.\n";
 
     cerr << "Initializing output buffer, " << outbytes << " bytes ... " << flush;
@@ -61,12 +65,13 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         cerr << "done." << endl;
     }
 
-    cerr << "Mapping output buffer as RAT resource 11 ... " << flush;
-    state.set_rat(11, outbo, 0, outbytes);
+    cerr << "Mapping output buffer as RAT resource (id=0) ... " << flush;
+    state.set_rat(0, outbo, 0, outbytes);
+    //state.set_export(outbo, 0, outbytes);
     cerr << "done." << endl;
   
-    cerr << "Initializing the constant cache ... " << flush;
-    radeon_bo* constbo = state.bo_open(0, 1024, 4096, RADEON_GEM_DOMAIN_VRAM, 0);
+    cerr << "Initializing the constant cache (id=0) ... " << flush;
+    radeon_bo* constbo = state.bo_open(0, 128, 4096, RADEON_GEM_DOMAIN_VRAM, 0);
     {
         radeon_bo_map(constbo, 1);
         uint32_t* ptr = static_cast<uint32_t*>(constbo->ptr);
@@ -79,14 +84,14 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         *ptr++ = 1, *ptr++ = x, *ptr++ = x*y, *ptr++ = 0;
         *ptr++ = g, *ptr++ = X*g, *ptr++ = X*Y*g, *ptr++ = 0;
         radeon_bo_unmap(constbo);
-        state.setup_const_cache(0, constbo, 256, 0);
+        state.setup_const_cache(0, constbo, 32, 0);
         cerr << "done." << endl;
     }
 
     cerr << "Initializing the rest of the CS ... " << flush;
     state.set_gds(0, 0);
     state.set_tmp_ring(NULL, 0, 0);
-    state.set_lds(0, 0, 0);
+    state.set_lds(0, 0, num_waves);
     state.load_shader(&sh);
     state.direct_dispatch(
         initializer_list<int>({ X, Y, Z }),
@@ -118,14 +123,16 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         radeon_bo_map(outbo, 0);
         uint32_t* beg = static_cast<uint32_t*>(outbo->ptr);
         uint32_t* end = beg + outsize;
-        uint32_t min_ts = 0xffffffff;
+        uint32_t min_ts = 0xffffffff, max_ts = 0;
         for (uint32_t* ptr = beg; ptr != end; ptr += 4)
             if (ptr[3] < min_ts)
                 min_ts = ptr[3];
+            else if (ptr[3] > max_ts)
+                max_ts = ptr[3];
         for (uint32_t* ptr = beg; ptr != end; ptr += 4)
             ptr[3] -= min_ts;
         radeon_bo_unmap(outbo);  
-        cerr << "done." << endl;
+        cerr << "done (" << (max_ts - min_ts) << " cycles)." << endl;
     }
 
     cerr << "Kernel output:" << endl;
