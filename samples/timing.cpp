@@ -62,8 +62,8 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         cerr << "done." << endl;
     }
 
-    cerr << "Mapping output buffer as RAT resource 1 ... " << flush;
-    state.set_rat(1, outbo, 0, outbytes);
+    cerr << "Mapping output buffer as RAT resource (id=0) ... " << flush;
+    state.set_rat(0, outbo, 0, outbytes);
     cerr << "done." << endl;
   
     cerr << "Initializing the rest of the CS ... " << flush;
