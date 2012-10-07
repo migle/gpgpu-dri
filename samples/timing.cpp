@@ -32,10 +32,14 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         g = x * y * z,
         G = X * Y * Z,
         Dx = x * X, Dy = y * Y, Dz = z * Z,
-        size = Dx * Dy * Dz;
+        size = Dx * Dy * Dz,
+        wavefront = 64, num_pipes = 2, wave_divisor = 16 * num_pipes,
+        num_waves = (g + wave_divisor - 1) / wave_divisor;
+
     cerr << "Shader \"" << shader << "\"\n"
         "GPRs = " << sh.num_gprs << " temp GPRs = " << sh.temp_gprs << " global GPRs = " << sh.global_gprs << "\n"
-        "stack = " << sh.stack_size << " alloc = " << sh.alloc_size << "\n\n"
+        "stack = " << sh.stack_size << " alloc = " << sh.alloc_size << "\n"
+        "wavefronts per group = " << num_waves << " using " << num_pipes << " pipes\n\n"
         "items per group = " << x << "x" << y << "x" << z << " = " << g << "\n"
         "number of groups = " << X << "x" << Y << "x" << Z << " = " << G << "\n"
         "domain size = " << Dx << "x" << Dy << "x" << Dz << " = " << size << "\n" << endl;
@@ -69,7 +73,7 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
     cerr << "Initializing the rest of the CS ... " << flush;
     state.set_gds(0, 0);
     state.set_tmp_ring(NULL, 0, 0);
-    state.set_lds(0, 0, 0);
+    state.set_lds(0, 0, num_waves);
     state.load_shader(&sh);
     state.direct_dispatch(
         initializer_list<int>({ X, Y, Z }),
