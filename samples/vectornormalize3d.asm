@@ -6,13 +6,9 @@
 //  constant buffer 0:
 //      items per group x, 1, 1, 0
 //      number of groups X, 1, 1, 0
-//      mat(0,0) mat(0,1) mat(0,2) mat(0,3)
-//      mat(1,0) mat(1,1) mat(1,2) mat(1,3)
-//      mat(2,0) mat(2,1) mat(2,2) mat(2,3)
-//      mat(3,0) mat(3,1) mat(3,2) mat(3,3)
 //
 //  RAT resource 0 (output buffer) with 4 floats per work-item.
-//  VTX resource 0 (intput buffer) with 4 floats per work-item.
+//  VTX resource 1 (intput buffer) with 4 floats per work-item.
 
 ALU: KCACHE_BANK0(0) KCACHE_MODE0.CF_KCACHE_LOCK_1 BARRIER;
     // R0.x <- R0.x + R1.x * Kcache_bank0(0)
