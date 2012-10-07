@@ -1,0 +1,25 @@
+Shader "./scheduling.bin"
+GPRs = 4 temp GPRs = 0 global GPRs = 0
+stack = 0 alloc = 464
+wavefronts per group = 32 using 2 pipes
+
+items per group = 32x32x1 = 1024
+number of groups = 4x4x1 = 16
+domain size = 128x128x1 = 16384
+
+This shader has one primary output buffer of 4 32-bit ints per wavefront.
+Output size = 1024 ints, 1040 w/guard, 4160 bytes.
+Initializing output buffer, 4160 bytes ... done.
+Mapping output buffer as RAT resource (id=0) ... done.
+Initializing the constant cache (id=0) ... done.
+Initializing the rest of the CS ... done.
+
+Executing kernel ... done.
+
+Execution time: 260089 ns
+0.0148961 GByte/s
+0.119168 Gbit/s
+
+Making GPU timestamps relative ... done (2732 cycles).
+Kernel output:
+OK
