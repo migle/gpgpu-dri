@@ -23,18 +23,22 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
 int main(int argc, char* argv[])
 {
     const char *card = "/dev/dri/card0";
+    string suffix;
     int x = 1, y = 1, z = 1;
     int X = 1, Y = 1, Z = 1;
     int guard = 16, columns = 4, address = 6;
     bool reset = false;
 
-    for (int opt = 0; (opt = getopt(argc, argv, "rc:x:y:z:X:Y:Z:G:w:a:")) != -1; )
+    for (int opt = 0; (opt = getopt(argc, argv, "rc:s:x:y:z:X:Y:Z:G:w:a:")) != -1; )
         switch (opt) {
             case 'r':
                 reset = true;
                 break;
             case 'c':
                 card = optarg;
+                break;
+            case 's':
+                suffix = optarg;
                 break;
             case 'x':
                 x = atoi(optarg);
@@ -64,9 +68,10 @@ int main(int argc, char* argv[])
                 address = atoi(optarg);
                 break;
             default:
-                cerr << "Usage: " << argv[0] << " [-r] [-c<card>] [-x<n>] [-y<n>] [-z<n>] [-X<n>] [-Y<n>] [-Z<n>] [-G<n>] [-w<n>] [-a<n>]\n\n"
+                cerr << "Usage: " << argv[0] << " [-r] [-c<card>] [-s<s>] [-x<n>] [-y<n>] [-z<n>] [-X<n>] [-Y<n>] [-Z<n>] [-G<n>] [-w<n>] [-a<n>]\n\n"
                     "\t-c/dev/dri/card<n> use alternate card\n"
                     "\t-r\treset GPU before starting\n"
+                    "\t-s <s>\tshader variant suffix\n"
                     "\t-x <n>\tnumber of items per group in X (1)\n"
                     "\t-y <n>\tnumber of items per group in Y (1)\n"
                     "\t-z <n>\tnumber of items per group in Z (1)\n"
@@ -82,6 +87,7 @@ int main(int argc, char* argv[])
     try
     {
         string shader = argv[0];
+        shader += suffix;
         shader += ".bin";
 
         int fd = open(card, O_RDWR, 0);

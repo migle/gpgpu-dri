@@ -13,17 +13,17 @@ using namespace std;
 
 void load(r800_state& state, string const& shader, int x, int y, int z, int X, int Y, int Z, int guard, int cols, int addr)
 {
-    if (x < 1 || y < 1 || z < 1 || X < 1 || Y < 1 || Z < 1 || guard < 0)
+    if (x < 1 || y < 1 || z < 1 || X < 1 || Y < 1 || Z < 1 || guard < 0 ||
+                 y > 1 || z > 1 ||          Y > 1 || Z > 1)
         throw runtime_error("domain size error");
 
     compute_shader sh(&state, shader);
 
     sh.lds_alloc = 0;
     sh.num_gprs = 4;
-    sh.temp_gprs = 0;
+    sh.temp_gprs = 4;
     sh.global_gprs = 0;
-    sh.stack_size = 0;
-    //sh.thread_num = 4;
+    sh.stack_size = 16;
 
     state.set_kms_compute_mode(true);
 
@@ -44,10 +44,10 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         "domain size = " << Dx << "x" << Dy << "x" << Dz << " = " << size << "\n" << endl;
 
     const int
-        outsize = size * 4 / wavefront,
+        outsize = size,
         outsafe = outsize + guard,
         outbytes = outsafe * sizeof(uint32_t);
-    cerr << "This shader has one primary output buffer of 4 32-bit ints per wavefront.\n"
+    cerr << "This shader has one output buffer of one 32-bit int per work item.\n"
         "Output size = " << outsize << " ints, " << outsafe << " w/guard, " << outbytes << " bytes.\n";
 
     cerr << "Initializing output buffer, " << outbytes << " bytes ... " << flush;
@@ -70,20 +70,14 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
     cerr << "done." << endl;
   
     cerr << "Initializing the constant cache (id=0) ... " << flush;
-    radeon_bo* constbo = state.bo_open(0, 128, 4096, RADEON_GEM_DOMAIN_VRAM, 0);
+    radeon_bo* constbo = state.bo_open(0, 32, 4096, RADEON_GEM_DOMAIN_VRAM, 0);
     {
         radeon_bo_map(constbo, 1);
         uint32_t* ptr = static_cast<uint32_t*>(constbo->ptr);
         *ptr++ = x, *ptr++ = y, *ptr++ = z, *ptr++ = 0;
         *ptr++ = X, *ptr++ = Y, *ptr++ = Z, *ptr++ = 0;
-        // more coalescent mapping:
-        *ptr++ = 1, *ptr++ = x, *ptr++ = x*y, *ptr++ = 0;
-        *ptr++ = g, *ptr++ = X*g, *ptr++ = X*Y*g, *ptr++ = 0;
-        // another mapping:
-        *ptr++ = 1, *ptr++ = Dx, *ptr++ = Dx*Dy, *ptr++ = 0;
-        *ptr++ = x, *ptr++ = Dx*y, *ptr++ = Dx*Dy*z, *ptr++ = 0;
         radeon_bo_unmap(constbo);
-        state.setup_const_cache(0, constbo, 32, 0);
+        state.setup_const_cache(0, constbo, 8, 0);
         cerr << "done." << endl;
     }
 
@@ -117,23 +111,6 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
              << endl;
     }
   
-    cerr << "Making GPU timestamps relative ... " << flush;
-    {
-        radeon_bo_map(outbo, 0);
-        uint32_t* beg = static_cast<uint32_t*>(outbo->ptr);
-        uint32_t* end = beg + outsize;
-        uint32_t min_ts = 0xffffffff, max_ts = 0;
-        for (uint32_t* ptr = beg; ptr != end; ptr += 4)
-            if (ptr[3] < min_ts)
-                min_ts = ptr[3];
-            else if (ptr[3] > max_ts)
-                max_ts = ptr[3];
-        for (uint32_t* ptr = beg; ptr != end; ptr += 4)
-            ptr[3] -= min_ts;
-        radeon_bo_unmap(outbo);  
-        cerr << "done (" << (max_ts - min_ts) << " cycles)." << endl;
-    }
-
     cerr << "Kernel output:" << endl;
     {
         radeon_bo_map(outbo, 0);
