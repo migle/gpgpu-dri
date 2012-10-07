@@ -1,0 +1,22 @@
+mem size init: gart size :1fdff000 vram size: s:40000000 visible:f8ca000
+mem size init: gart size :509Mbytes vram size: s:1024Mbytes visible:248Mbytes
+000000:	ffffffff	dead00c0	ffffffff	ffffffff
+000004:	ffffffff	dead00c0	ffffffff	ffffffff
+000008:	ffffffff	dead00c0	ffffffff	ffffffff
+00000c:	ffffffff	dead00c0	ffffffff	ffffffff
+000010:	dead00b0	dead00b0	dead00b0	dead00b0
+000014:	dead00b0	dead00b0	dead00b0	dead00b0
+000018:	dead00b0	dead00b0	dead00b0	dead00b0
+00001c:	dead00b0	dead00b0	dead00b0	dead00b0
+000020:	ffffffff	dead00c0	ffffffff	ffffffff
+000024:	ffffffff	dead00c0	ffffffff	ffffffff
+000028:	ffffffff	dead00c0	ffffffff	ffffffff
+00002c:	ffffffff	dead00c0	ffffffff	ffffffff
+000030:	ffffffff	ffffffff	ffffffff	ffffffff
+000034:	ffffffff	ffffffff	ffffffff	ffffffff
+000038:	ffffffff	ffffffff	ffffffff	ffffffff
+00003c:	ffffffff	ffffffff	ffffffff	ffffffff
+000040:	eaeaeaea	eaeaeaea	eaeaeaea	eaeaeaea
+000044:	eaeaeaea	eaeaeaea	eaeaeaea	eaeaeaea
+000048:	eaeaeaea	eaeaeaea	eaeaeaea	eaeaeaea
+00004c:	eaeaeaea	eaeaeaea	eaeaeaea	eaeaeaea

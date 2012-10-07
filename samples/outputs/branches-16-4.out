@@ -1,0 +1,22 @@
+mem size init: gart size :1fdff000 vram size: s:40000000 visible:f8ca000
+mem size init: gart size :509Mbytes vram size: s:1024Mbytes visible:248Mbytes
+000000:	beef0128	dead0128	beef0128	beef0128
+000004:	beef0128	dead0128	beef0128	beef0128
+000008:	beef0128	dead0128	beef0128	beef0128
+00000c:	beef0128	dead0128	beef0128	beef0128
+000010:	dead0100	dead0100	dead0100	dead0100
+000014:	dead0100	dead0100	dead0100	dead0100
+000018:	dead0100	dead0100	dead0100	dead0100
+00001c:	dead0100	dead0100	dead0100	dead0100
+000020:	beef0128	dead0128	beef0128	beef0128
+000024:	beef0128	dead0128	beef0128	beef0128
+000028:	beef0128	dead0128	beef0128	beef0128
+00002c:	beef0128	dead0128	beef0128	beef0128
+000030:	beef0110	beef0110	beef0110	beef0110
+000034:	beef0110	beef0110	beef0110	beef0110
+000038:	beef0110	beef0110	beef0110	beef0110
+00003c:	beef0110	beef0110	beef0110	beef0110
+000040:	eaeaeaea	eaeaeaea	eaeaeaea	eaeaeaea
+000044:	eaeaeaea	eaeaeaea	eaeaeaea	eaeaeaea
+000048:	eaeaeaea	eaeaeaea	eaeaeaea	eaeaeaea
+00004c:	eaeaeaea	eaeaeaea	eaeaeaea	eaeaeaea
