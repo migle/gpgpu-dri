@@ -1,0 +1,25 @@
+Shader "./vectornormalize3d.bin"
+GPRs = 4 temp GPRs = 0 global GPRs = 0
+stack = 16 alloc = 320
+wavefronts per group = 32 using 2 pipes
+
+items per group = 1024x1x1 = 1024
+number of groups = 8x1x1 = 8
+domain size = 8192x1x1 = 8192
+
+This shader has one output buffer of 4 32-bit floats per work item.
+Output size = 32768 floats, 32784 w/guard, 131136 bytes.
+Initializing output buffer, 131136 bytes ... done.
+Mapping output buffer as RAT resource (id=0) ... done.
+Initializing the constant cache (id=0) ... done.
+Initializing the vertex input buffer (id=1), 131136 bytes ... done.
+Initializing the rest of the CS ... done.
+
+Executing kernel ... done.
+
+Execution time: 289981 ns
+0.421165 GByte/s
+3.36932 Gbit/s
+
+Kernel output:
+OK

@@ -1,6 +1,19 @@
 // Miguel Ramos, 2012.
 // vim: set et sw=4 sts=4 ts=8:
 
+// This CS is meant for a 1-D domain.
+// It expects the following resources to be set up:
+//  constant buffer 0:
+//      items per group x, 1, 1, 0
+//      number of groups X, 1, 1, 0
+//      mat(0,0) mat(0,1) mat(0,2) mat(0,3)
+//      mat(1,0) mat(1,1) mat(1,2) mat(1,3)
+//      mat(2,0) mat(2,1) mat(2,2) mat(2,3)
+//      mat(3,0) mat(3,1) mat(3,2) mat(3,3)
+//
+//  RAT resource 0 (output buffer) with 4 floats per work-item.
+//  VTX resource 0 (intput buffer) with 4 floats per work-item.
+
 ALU: KCACHE_BANK0(0) KCACHE_MODE0.CF_KCACHE_LOCK_1 BARRIER;
 
     // PV.[xyzw] <- local_ID.[xyzw] * local_stride.[xyzw]
