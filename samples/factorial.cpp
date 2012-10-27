@@ -20,11 +20,10 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
     compute_shader sh(&state, shader);
 
     sh.lds_alloc = 0;
-    sh.num_gprs = 2;
+    sh.num_gprs = 4;
     sh.temp_gprs = 0;
     sh.global_gprs = 0;
     sh.stack_size = 42;
-    //sh.thread_num = 4;
 
     state.set_kms_compute_mode(true);
 
@@ -48,7 +47,7 @@ void load(r800_state& state, string const& shader, int x, int y, int z, int X, i
         outsize = size,
         outsafe = outsize + guard,
         outbytes = outsafe * sizeof(uint32_t);
-    cerr << "This shader has one output buffer of one 32-bit ints per work item.\n"
+    cerr << "This shader has one output buffer of one 32-bit int per work item.\n"
         "Output size = " << outsize << " ints, " << outsafe << " w/guard, " << outbytes << " bytes.\n";
 
     cerr << "Initializing output buffer, " << outbytes << " bytes ... " << flush;
