@@ -1,0 +1,82 @@
+// Miguel Ramos, 2012.
+// vim: set et sw=4 sts=4 ts=8:
+
+// This CS is meant for a 1-D domain.
+// It expects the following resources to be set up:
+//  constant buffer 0:
+//      items per group x, 1, 1, 0
+//      number of groups X, 1, 1, 0
+//
+//  RAT resource 0 (output buffer) with 1 float 4-vector per work-item.
+//  VTX resource 1 (intput buffer) with N float 4-vectors per work-item.
+//
+//  loop constants (initial:step:number of trips):
+//      0:1:N
+//      0:x:N
+//      0:1:x*N
+//      0:4:x*N
+
+ALU: KCACHE_BANK0(0) KCACHE_MODE0.CF_KCACHE_LOCK_1 BARRIER;
+
+    // R1.x <- R0.x + R1.x * Kcache_bank0(0)
+    MULADD_UINT24: DST_GPR(1) DST_CHAN.CHAN_X
+        SRC0_SEL.GPR(1) SRC0_CHAN.CHAN_X
+        SRC1_SEL.Kcache_bank0(0) SRC1_CHAN.CHAN_X
+        SRC2_SEL.GPR(0) SRC2_CHAN.CHAN_X LAST;
+
+    // R0.y <- R0.x << 2, R0.z <- R0.x << 6
+    LSHL_INT: DST_GPR(0) DST_CHAN.CHAN_Y WRITE_MASK
+        SRC0_SEL.GPR(0) SRC0_CHAN.CHAN_X
+        SRC1_SEL.ALU_SRC_LITERAL SRC1_CHAN.CHAN_X;
+    LSHL_INT: DST_GPR(0) DST_CHAN.CHAN_Z WRITE_MASK
+        SRC0_SEL.GPR(0) SRC0_CHAN.CHAN_X
+        SRC1_SEL.ALU_SRC_LITERAL SRC1_CHAN.CHAN_Y LAST;
+    0x00000002 0x00000006;
+    // R1.y <- R1.x << 2, R1.z <- R1.x << 6
+    LSHL_INT: DST_GPR(1) DST_CHAN.CHAN_Y WRITE_MASK
+        SRC0_SEL.GPR(1) SRC0_CHAN.CHAN_X
+        SRC1_SEL.ALU_SRC_LITERAL SRC1_CHAN.CHAN_X;
+    LSHL_INT: DST_GPR(1) DST_CHAN.CHAN_Z WRITE_MASK
+        SRC0_SEL.GPR(1) SRC0_CHAN.CHAN_X
+        SRC1_SEL.ALU_SRC_LITERAL SRC1_CHAN.CHAN_Y LAST;
+    0x00000002 0x00000006;
+
+    MOV: DST_GPR(2) DST_CHAN.CHAN_X
+        SRC0_SEL.ALU_SRC_0 WRITE_MASK;
+    MOV: DST_GPR(2) DST_CHAN.CHAN_Y
+        SRC0_SEL.ALU_SRC_0 WRITE_MASK;
+    MOV: DST_GPR(2) DST_CHAN.CHAN_Z
+        SRC0_SEL.ALU_SRC_0 WRITE_MASK;
+    MOV: DST_GPR(2) DST_CHAN.CHAN_W
+        SRC0_SEL.ALU_SRC_0 WRITE_MASK LAST;
+
+LOOP_START: CF_CONST(0) ADDR(@endloop1);
+@loop1
+
+TC: BARRIER;
+    FETCH: FETCH_TYPE.VTX_FETCH_NO_INDEX_OFFSET BUFFER_ID(1) SRC_GPR(1) SRC_SEL_X.SEL_Z SRC_REL MEGA_FETCH_COUNT(15);
+        DST_GPR(3) DST_SEL_X.SEL_X DST_SEL_Y.SEL_Y DST_SEL_Z.SEL_Z DST_SEL_W.SEL_1 USE_CONST_FIELDS;
+        MEGA_FETCH;
+
+ALU: BARRIER;
+    ADD: DST_GPR(2) DST_CHAN.CHAN_X WRITE_MASK
+        SRC0_SEL.GPR(2) SRC0_CHAN.CHAN_X
+        SRC1_SEL.GPR(3) SRC1_CHAN.CHAN_X;
+    ADD: DST_GPR(2) DST_CHAN.CHAN_Y WRITE_MASK
+        SRC0_SEL.GPR(2) SRC0_CHAN.CHAN_Y
+        SRC1_SEL.GPR(3) SRC1_CHAN.CHAN_Y;
+    ADD: DST_GPR(2) DST_CHAN.CHAN_Z WRITE_MASK
+        SRC0_SEL.GPR(2) SRC0_CHAN.CHAN_Z
+        SRC1_SEL.GPR(3) SRC1_CHAN.CHAN_Z;
+    ADD: DST_GPR(2) DST_CHAN.CHAN_W WRITE_MASK
+        SRC0_SEL.GPR(2) SRC0_CHAN.CHAN_W
+        SRC1_SEL.GPR(3) SRC1_CHAN.CHAN_W LAST;
+
+LOOP_END: CF_CONST(0) ADDR(@loop1);
+@endloop1
+
+MEM_RAT_CACHELESS:
+    RAT_ID(0) RAT_INST.EXPORT_RAT_INST_STORE_RAW TYPE(1) RW_GPR(2) INDEX_GPR(1) ELEM_SIZE(3)
+    COMP_MASK(15) BARRIER END_OF_PROGRAM;
+
+end;
